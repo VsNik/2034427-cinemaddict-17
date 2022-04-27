@@ -1,7 +1,7 @@
 # Проект «Киноман»
 
 * Студент: [Василий](https://up.htmlacademy.ru/ecmascript/17/user/2034427).
-* Наставник: [Дмитрий Рябинин](https://up.htmlacademy.ru/javascript/25/user/63289).
+* Наставник: [Дмитрий Рябинин](https://up.htmlacademy.ru/ecmascript/17/user/63289).
 
 ---
 
