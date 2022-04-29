@@ -1,6 +1,7 @@
 import {createElement} from '../render.js';
 
-const createContentTemplate = () => '<section class="films"></section>';
+const createContentTemplate = () =>
+  '<section class="films"></section>';
 
 export default class ContentView {
 
