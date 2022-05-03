@@ -4,8 +4,8 @@ import {formattingDuration} from '../utils.js';
 
 const MAX_DESCRIPTION_LENGTH = 140;
 
-const createMovieTemplate = ({filmInfo, userDetails, comments}) => {
-
+const createMovieTemplate = (movie) => {
+  const {filmInfo, userDetails, comments} = movie;
   const {title, totalRating, poster, release, runtime, genre, description} = filmInfo;
   const {watchlist, alreadyWatched, favorite} = userDetails;
 
@@ -58,23 +58,26 @@ const createMovieTemplate = ({filmInfo, userDetails, comments}) => {
 
 export default class MovieView {
 
+  #element = null;
+  #movie = null;
+
   constructor(movie) {
-    this.movie = movie;
+    this.#movie = movie;
   }
 
-  getTemplate() {
-    return createMovieTemplate(this.movie);
+  get template() {
+    return createMovieTemplate(this.#movie);
   }
 
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
+  get element() {
+    if (!this.#element) {
+      this.#element = createElement(this.template);
     }
 
-    return this.element;
+    return this.#element;
   }
 
   removeElement() {
-    this.element = null;
+    this.#element = null;
   }
 }

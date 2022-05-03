@@ -134,8 +134,8 @@ const createCommentTemplate = ({emoji, text, author, date}) => {
   </li>`;
 };
 
-const createPopupTemplate = ({filmInfo, userDetails, comments}, movieComments) => {
-
+const createPopupTemplate = (movie, movieComments) => {
+  const {filmInfo, userDetails, comments} = movie;
   const commentsCount = comments.length;
   const commentsList = movieComments.map((it) => createCommentTemplate(it)).join('');
 
@@ -195,24 +195,28 @@ const createPopupTemplate = ({filmInfo, userDetails, comments}, movieComments) =
 
 export default class PopupView {
 
+  #element = null;
+  #movie = null;
+  #comments = null;
+
   constructor(movie, comments) {
-    this.movie = movie;
-    this.coments = comments;
+    this.#movie = movie;
+    this.#comments = comments;
   }
 
-  getTemplate() {
-    return createPopupTemplate(this.movie, this.coments);
+  get template() {
+    return createPopupTemplate(this.#movie, this.#comments);
   }
 
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
+  get element() {
+    if (!this.#element) {
+      this.#element = createElement(this.template);
     }
 
-    return this.element;
+    return this.#element;
   }
 
   removeElement() {
-    this.element = null;
+    this.#element = null;
   }
 }

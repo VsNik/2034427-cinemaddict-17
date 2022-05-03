@@ -20,3 +20,15 @@ export const getRandomPastDate = (years = 10) => {
   return date.toISOString();
 };
 
+export const getRandomCommentsIds = (totalComments, commentsToMovie) => {
+  const commentsIds = [];
+
+  while (commentsIds.length !== commentsToMovie) {
+    const item = generateRandomInt(1, totalComments);
+    if (!commentsIds.includes(item)) {
+      commentsIds.push(item);
+    }
+  }
+
+  return commentsIds;
+};

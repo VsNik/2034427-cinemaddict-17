@@ -2,9 +2,9 @@ import {createComments} from '../mock/comments-mock.js';
 
 export default class CommentsModel {
 
-  getComments(movie) {
-    this.comments = createComments(movie.comments);
+  #comments = createComments();
 
-    return this.comments;
+  getCommentsByIds(movieIds) {
+    return this.#comments.filter((it) => movieIds.includes(it.id));
   }
 }
