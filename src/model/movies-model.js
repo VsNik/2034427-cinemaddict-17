@@ -4,9 +4,9 @@ const MOVIES_COUNT = 15;
 
 export default class MoviesModel {
 
-  movies = createMovies(MOVIES_COUNT);
+  #movies = createMovies(MOVIES_COUNT);
 
-  getMovies() {
-    return this.movies;
+  get movies() {
+    return this.#movies;
   }
 }

@@ -12,19 +12,21 @@ const createMenuTemplate = () => `
 
 export default class MenuView {
 
-  getTemplate() {
+  #element = null;
+
+  get template() {
     return createMenuTemplate();
   }
 
-  getElement() {
-    if (!this.elemet) {
-      this.elemet = createElement(this.getTemplate());
+  get element() {
+    if (!this.#element) {
+      this.#element = createElement(this.template);
     }
 
-    return this.elemet;
+    return this.#element;
   }
 
   removeElement() {
-    this.element = null;
+    this.#element = null;
   }
 }

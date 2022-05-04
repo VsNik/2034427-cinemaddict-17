@@ -1,5 +1,6 @@
-import {generateRandomInt, getRandomElement, getRandomElements, getRandomPastDate} from './utils-mock.js';
+import {generateRandomInt, getRandomElement, getRandomElements, getRandomPastDate, getRandomCommentsIds} from './utils-mock.js';
 import {mockPhrases, mockActors, mockDirectors, mockTitles, mockPosters} from './data-mock.js';
+import {COMMENTS_COUNT} from './comments-mock.js';
 
 const GENRES = ['Musical', 'Drama', 'Film-Noir', 'Comedy', 'Adventure', 'Action', 'Fantasy'];
 const COUNTRIES = ['Russia', 'Belarus', 'China', 'India', 'France', 'USA'];
@@ -7,7 +8,8 @@ const AGE_RATING = [0, 12, 16, 18];
 
 const createMovieItem = () => (
   {
-    comments: [1,2,3,4,5].slice(0, generateRandomInt(0, 5)),
+    // comments: [1,2,3,4,5].slice(0, generateRandomInt(0, 5)),
+    comments: getRandomCommentsIds(COMMENTS_COUNT,generateRandomInt(0, 5)),
     filmInfo: {
       title: getRandomElement(mockTitles),
       alternativeTitle: getRandomElement(mockTitles),
