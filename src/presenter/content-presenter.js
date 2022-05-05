@@ -6,6 +6,7 @@ import MovieListExtraView from '../view/movie-list-extra-view.js';
 import MovieContainerView from '../view/movie-container-view.js';
 import SortingView from '../view/sorting-view.js';
 import PopupView from '../view/popup-view.js';
+import NoMoviesView from '../view/no-movies-view.js';
 import {render} from '../render.js';
 
 const Titles = {
@@ -13,55 +14,62 @@ const Titles = {
   COMMENTED: 'Most commented',
 };
 
+const EmptyContentMessage = {
+  MOVIES: 'There are no movies in our database',
+  WATCHLIST: 'There are no movies to watch now',
+  HISTORY: 'There are no watched movies now',
+  FAVORITES: 'There are no favorite movies now',
+};
+
 const SHOW_MOVIES_COUNT = 5;
-const SHOW_RATED_COUNT = 2;
-const SHOW_COMMENTED_COUNT = 2;
 
 export default class ContentPresenter {
 
-  #bodyElement;
   #container;
-  #movies;
+  #movies = [];
   #moviesModel;
   #commentsModel;
   #contentComponent = new ContentView();
   #movieListComponent = new MovieListView();
+  #loadMoreButtonComponent = new LoadMoreButtonView();
+  #movieContainerComponent = new MovieContainerView();
+  #renderedMovieCount = SHOW_MOVIES_COUNT;
 
-  init(container, moviesModel, commentsModel) {
-    this.#bodyElement = container.parentNode;
+  constructor(container, moviesModel, commentsModel) {
     this.#container = container;
     this.#moviesModel = moviesModel;
     this.#commentsModel = commentsModel;
-    this.#movies = this.#moviesModel.movies;
-
-    render(new SortingView(), container);
-    render(this.#contentComponent, container);
-
-    this.#renderMovieList(this.#movieListComponent, this.#movies, SHOW_MOVIES_COUNT);
-    this.#renderMovieList(new MovieListExtraView(Titles.RATED), this.#movies, SHOW_RATED_COUNT);
-    this.#renderMovieList(new MovieListExtraView(Titles.COMMENTED), this.#movies, SHOW_COMMENTED_COUNT);
-
-    render(new LoadMoreButtonView(), this.#movieListComponent.element);
   }
 
-  #renderMovieList(listContainer, movies, count) {
-    const movieContainer = new MovieContainerView();
-    render(listContainer, this.#contentComponent.element);
-    render(movieContainer, listContainer.element);
+  init = () => {
+    this.#movies = this.#moviesModel.movies.slice();
+    this.#renderContent();
+  };
 
-    movies.slice(0, count).forEach((it) => {
-      this.#renderMovie(movieContainer, it);
-    });
-  }
+  #onLoadMoreButtonClick = () => {
+    this.#movies
+      .slice(this.#renderedMovieCount, this.#renderedMovieCount + SHOW_MOVIES_COUNT)
+      .forEach((it) => {
+        this.#renderMovie(this.#movieContainerComponent, it);
+      });
 
-  #renderMovie(movieContainer, movie) {
+    this.#renderedMovieCount += SHOW_MOVIES_COUNT;
+
+    if (this.#renderedMovieCount >= this.#movies.length) {
+      this.#loadMoreButtonComponent.element.remove();
+      this.#loadMoreButtonComponent.removeElement();
+    }
+  };
+
+  #renderMovie = (movieContainer, movie) => {
+    const bodyElement = this.#container.parentNode;
     const movieComments = this.#commentsModel.getCommentsByIds(movie.comments);
     const movieComponent = new MovieView(movie);
     const popupComponent = new PopupView(movie, movieComments);
 
     const onClosePopup = () => {
-      this.#bodyElement.classList.remove('hide-overflow');
-      this.#bodyElement.removeChild(popupComponent.element);
+      bodyElement.classList.remove('hide-overflow');
+      bodyElement.removeChild(popupComponent.element);
       popupComponent.removeElement();
     };
 
@@ -73,9 +81,10 @@ export default class ContentPresenter {
     };
 
     const onOpenPopup = () => {
-      this.#bodyElement.classList.add('hide-overflow');
-      this.#bodyElement.appendChild(popupComponent.element);
+      bodyElement.classList.add('hide-overflow');
+      bodyElement.appendChild(popupComponent.element);
       document.addEventListener('keydown', onEscKeyDown);
+
       popupComponent.element.querySelector('.film-details__close-btn').addEventListener('click', () => {
         document.removeEventListener('keydown', onEscKeyDown);
         onClosePopup();
@@ -90,6 +99,42 @@ export default class ContentPresenter {
     });
 
     render(movieComponent, movieContainer.element);
-  }
+  };
+
+  #renderExtraMovieList = (listContainer, movies) => {
+    if (movies.length) {
+      const movieContainer = new MovieContainerView();
+      render(listContainer, this.#contentComponent.element);
+      render(movieContainer, listContainer.element);
+
+      movies.forEach((it) => {
+        this.#renderMovie(movieContainer, it);
+      });
+    }
+  };
+
+  #renderContent = () => {
+    if (!this.#movies.length) {
+      const noMoviesComponent = new NoMoviesView(EmptyContentMessage.MOVIES);
+      render(noMoviesComponent, this.#container);
+      return;
+    }
+
+    render(new SortingView(), this.#container);
+    render(this.#contentComponent, this.#container);
+    render(this.#movieListComponent, this.#contentComponent.element);
+    render(this.#movieContainerComponent, this.#movieListComponent.element);
+
+    this.#movies.slice(0, Math.min(this.#movies.length, SHOW_MOVIES_COUNT)).forEach((it) => {
+      this.#renderMovie(this.#movieContainerComponent, it);
+    });
+
+    if (this.#movies.length > SHOW_MOVIES_COUNT) {
+      render(this.#loadMoreButtonComponent, this.#movieListComponent.element);
+      this.#loadMoreButtonComponent.element.addEventListener('click', this.#onLoadMoreButtonClick);
+    }
+    this.#renderExtraMovieList(new MovieListExtraView(Titles.RATED), this.#moviesModel.topRating);
+    this.#renderExtraMovieList(new MovieListExtraView(Titles.COMMENTED), this.#moviesModel.topCommentsCount);
+  };
 }
 

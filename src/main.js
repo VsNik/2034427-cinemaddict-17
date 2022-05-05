@@ -16,6 +16,8 @@ render(new StatisticsView(), statisticElement);
 
 const moviesModel = new MoviesModel();
 const commentsModel = new CommentsModel();
-const contentPresenter = new ContentPresenter();
-contentPresenter.init(mainElement, moviesModel, commentsModel);
+const contentPresenter = new ContentPresenter(mainElement, moviesModel, commentsModel);
+
+contentPresenter.init();
+
 
