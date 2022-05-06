@@ -85,18 +85,13 @@ export default class ContentPresenter {
       bodyElement.appendChild(popupComponent.element);
       document.addEventListener('keydown', onEscKeyDown);
 
-      popupComponent.element.querySelector('.film-details__close-btn').addEventListener('click', () => {
+      popupComponent.handleClosePopupClick(() => {
         document.removeEventListener('keydown', onEscKeyDown);
         onClosePopup();
       });
     };
 
-    movieComponent.element.addEventListener('click', (evt) => {
-      evt.preventDefault();
-      if (evt.target.tagName !== 'BUTTON') {
-        onOpenPopup();
-      }
-    });
+    movieComponent.handleOpenPopupClick(onOpenPopup);
 
     render(movieComponent, movieContainer.element);
   };
@@ -131,8 +126,9 @@ export default class ContentPresenter {
 
     if (this.#movies.length > SHOW_MOVIES_COUNT) {
       render(this.#loadMoreButtonComponent, this.#movieListComponent.element);
-      this.#loadMoreButtonComponent.element.addEventListener('click', this.#onLoadMoreButtonClick);
+      this.#loadMoreButtonComponent.handleShowMoreClick(this.#onLoadMoreButtonClick);
     }
+
     this.#renderExtraMovieList(new MovieListExtraView(Titles.RATED), this.#moviesModel.topRating);
     this.#renderExtraMovieList(new MovieListExtraView(Titles.COMMENTED), this.#moviesModel.topCommentsCount);
   };
