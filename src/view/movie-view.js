@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import {createElement} from '../render.js';
+import AbstractView from '../framework/view/abstract-view.js';
 import {formattingDuration} from '../utils.js';
 
 const MAX_DESCRIPTION_LENGTH = 140;
@@ -56,12 +56,12 @@ const createMovieTemplate = (movie) => {
   </article>`;
 };
 
-export default class MovieView {
+export default class MovieView extends AbstractView {
 
-  #element = null;
   #movie = null;
 
   constructor(movie) {
+    super();
     this.#movie = movie;
   }
 
@@ -69,15 +69,18 @@ export default class MovieView {
     return createMovieTemplate(this.#movie);
   }
 
-  get element() {
-    if (!this.#element) {
-      this.#element = createElement(this.template);
+  handleOpenPopupClick = (callback) => {
+    this._callback.click = callback;
+
+    this.element.addEventListener('click', this.#clickHandler);
+  };
+
+  #clickHandler = (evt) => {
+    evt.preventDefault();
+
+    if (evt.target.tagName !== 'BUTTON') {
+      this._callback.click();
     }
-
-    return this.#element;
-  }
-
-  removeElement() {
-    this.#element = null;
-  }
+  };
 }
+
