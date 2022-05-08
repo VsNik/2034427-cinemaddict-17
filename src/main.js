@@ -5,6 +5,7 @@ import ContentPresenter from './presenter/content-presenter.js';
 import MoviesModel from './model/movies-model.js';
 import CommentsModel from './model/comments-model.js';
 import {createFilters} from './mock/filter-mock.js';
+import {getUserRang} from './utils/user-rang.js';
 import {render} from './render.js';
 
 const headerElement = document.querySelector('.header');
@@ -16,8 +17,9 @@ const commentsModel = new CommentsModel();
 const contentPresenter = new ContentPresenter(mainElement, moviesModel, commentsModel);
 
 const filters = createFilters(moviesModel.movies);
+const userRating = getUserRang(moviesModel.movies);
 
-render(new ProfileView(), headerElement);
+render(new ProfileView(userRating), headerElement);
 render(new MenuView(filters), mainElement);
 render(new StatisticsView(), statisticElement);
 
