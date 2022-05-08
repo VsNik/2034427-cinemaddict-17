@@ -16,12 +16,14 @@ const moviesModel = new MoviesModel();
 const commentsModel = new CommentsModel();
 const contentPresenter = new ContentPresenter(mainElement, moviesModel, commentsModel);
 
-const filters = createFilters(moviesModel.movies);
-const userRating = getUserRang(moviesModel.movies);
+const movies = moviesModel.movies;
+const filters = createFilters(movies);
+const userRating = getUserRang(movies);
+const moviesCount = movies.length;
 
 render(new ProfileView(userRating), headerElement);
 render(new MenuView(filters), mainElement);
-render(new StatisticsView(), statisticElement);
+render(new StatisticsView(moviesCount), statisticElement);
 
 contentPresenter.init();
 
