@@ -1,17 +1,31 @@
 import AbstractView from '../framework/view/abstract-view.js';
 
-const createMenuTemplate = () => `
+const createMenuTemplate = (filters) => {
+
+  const filterItems = filters.map((it) => (`
+    <a href="#${it.name.toLowerCase()}" class="main-navigation__item">
+        ${it.name}
+        <span class="main-navigation__item-count">${it.count}</span>
+    </a>`
+  )).join('');
+
+  return `
     <nav class="main-navigation">
       <a href="#all" class="main-navigation__item main-navigation__item--active">All movies</a>
-      <a href="#watchlist" class="main-navigation__item">Watchlist <span class="main-navigation__item-count">13</span></a>
-      <a href="#history" class="main-navigation__item">History <span class="main-navigation__item-count">4</span></a>
-      <a href="#favorites" class="main-navigation__item">Favorites <span class="main-navigation__item-count">8</span></a>
-    </nav>
-`;
+        ${filterItems}
+    </nav>`;
+};
 
 export default class MenuView extends AbstractView{
 
+  #filters = null;
+
+  constructor(filters) {
+    super();
+    this.#filters = filters;
+  }
+
   get template() {
-    return createMenuTemplate();
+    return createMenuTemplate(this.#filters);
   }
 }
