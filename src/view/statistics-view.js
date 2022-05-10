@@ -1,12 +1,19 @@
 import AbstractView from '../framework/view/abstract-view.js';
 
-const createStatisticsTemplate = () =>
-  '<p>130 291 movies inside</p>';
+const createStatisticsTemplate = (moviesCount) =>
+  `<p>${moviesCount} movies inside</p>`;
 
 export default class StatisticsView extends AbstractView {
 
+  #moviesCount = null;
+
+  constructor(moviesCount) {
+    super();
+    this.#moviesCount = moviesCount;
+  }
+
   get template() {
-    return createStatisticsTemplate();
+    return createStatisticsTemplate(this.#moviesCount);
   }
 }
 
