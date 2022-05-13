@@ -6,7 +6,7 @@ import MoviesModel from './model/movies-model.js';
 import CommentsModel from './model/comments-model.js';
 import {createFilters} from './mock/filter-mock.js';
 import {getUserRang} from './utils/user-rang.js';
-import {render} from './render.js';
+import {render} from './framework/render.js';
 
 const headerElement = document.querySelector('.header');
 const mainElement = document.querySelector('.main');
