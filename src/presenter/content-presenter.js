@@ -7,6 +7,7 @@ import SortingView from '../view/sorting-view.js';
 import NoMoviesView from '../view/no-movies-view.js';
 import MoviePresenter from './movie-presenter.js';
 import {render, remove} from '../framework/render.js';
+import {updateItem} from '../utils/common.js';
 
 const Titles = {
   RATED: 'Top rated',
@@ -33,6 +34,7 @@ export default class ContentPresenter {
   #loadMoreButtonComponent = new LoadMoreButtonView();
   #movieContainerComponent = new MovieContainerView();
   #renderedMovieCount = SHOW_MOVIES_COUNT;
+  #moviePresenters = [];
 
   constructor(container, moviesModel, commentsModel) {
     this.#container = container;
@@ -77,14 +79,14 @@ export default class ContentPresenter {
       render(movieContainer, listContainer.element);
 
       movies.forEach((it) => {
-        this.#renderMovie(movieContainer, it);
+        this.#renderMovieItem(movieContainer, it);
       });
     }
   };
 
   #renderMovies = (from, to) => {
     this.#movies.slice(from, to).forEach((it) => {
-      this.#renderMovie(this.#movieContainerComponent, it);
+      this.#renderMovieItem(this.#movieContainerComponent, it);
     });
   };
 
@@ -102,17 +104,29 @@ export default class ContentPresenter {
     this.#loadMoreButtonComponent.handleShowMoreClick(this.#onLoadMoreButtonClick);
   };
 
-  #renderMovie = (movieContainer, movie) => {
+  #renderMovieItem = (movieContainer, movie) => {
     const bodyElement = this.#container.parentNode;
     const movieComments = this.#commentsModel.getCommentsByIds(movie.comments);
 
-    const moviePresenter = new MoviePresenter(bodyElement, movieContainer);
+    const moviePresenter = new MoviePresenter(bodyElement, movieContainer, this.#handleMovieChange);
     moviePresenter.init(movie, movieComments);
+    this.#moviePresenters.push(moviePresenter);
   };
 
   #renderNoMovies = () => {
     const noMoviesComponent = new NoMoviesView(EmptyContentMessage.MOVIES);
     render(noMoviesComponent, this.#container);
+  };
+
+  #handleMovieChange = (updatedMovie) => {
+    this.#movies = updateItem(this.#movies, updatedMovie);
+    const comments = this.#commentsModel.getCommentsByIds(updatedMovie.comments);
+
+    this.#moviePresenters.forEach((presenter) => {
+      if (presenter.getMovieId() === updatedMovie.id) {
+        presenter.init(updatedMovie, comments);
+      }
+    });
   };
 }
 
