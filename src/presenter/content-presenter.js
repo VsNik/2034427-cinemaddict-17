@@ -108,7 +108,7 @@ export default class ContentPresenter {
     const bodyElement = this.#container.parentNode;
     const movieComments = this.#commentsModel.getCommentsByIds(movie.comments);
 
-    const moviePresenter = new MoviePresenter(bodyElement, movieContainer, this.#handleMovieChange);
+    const moviePresenter = new MoviePresenter(bodyElement, movieContainer, this.#handleMovieChange, this.#handleModeChange);
     moviePresenter.init(movie, movieComments);
     this.#moviePresenters.push(moviePresenter);
   };
@@ -127,6 +127,10 @@ export default class ContentPresenter {
         presenter.init(updatedMovie, comments);
       }
     });
+  };
+
+  #handleModeChange = () => {
+    this.#moviePresenters.forEach((presenter) => presenter.resetView());
   };
 }
 
