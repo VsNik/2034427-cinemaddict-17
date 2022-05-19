@@ -1,24 +1,11 @@
-export const handleRatingSort = (prev, current, index, array) =>
-  current.filmInfo.totalRating > array[prev].filmInfo.totalRating ? index : prev;
+import dayjs from 'dayjs';
 
-export const handleCommentsSort = (prev, current, index, array) =>
-  current.comments.length > array[prev].comments.length ? index : prev;
+export const sortByRating = (movies) =>
+  movies.sort((movieA, movieB) => movieB.filmInfo.totalRating - movieA.filmInfo.totalRating);
 
-export const handleDateSort = (prev, current, index, array) =>
-  current.filmInfo.release.date > array[prev].filmInfo.release.date ? index : prev;
+export const sortByDate = (movies) =>
+  movies.sort((movieA, movieB) => dayjs(movieB.filmInfo.release.date).diff(dayjs(movieA.filmInfo.release.date)));
 
+export const sortByComments = (movies) =>
+  movies.sort((movieA, movieB) => movieB.comments.length - movieA.comments.length);
 
-export const sort = (arrayObjects, callback, count) => {
-
-  const cloneArrayObjects = [...arrayObjects];
-  const sortedObjects = [];
-  const length = cloneArrayObjects.length > count ? count : arrayObjects.length;
-
-  while (sortedObjects.length !== length) {
-    const indexMaxValue = cloneArrayObjects.reduce(callback, 0);
-    sortedObjects.push(cloneArrayObjects[indexMaxValue]);
-    cloneArrayObjects.splice(indexMaxValue, 1);
-  }
-
-  return sortedObjects;
-};
