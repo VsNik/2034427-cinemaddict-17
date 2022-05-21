@@ -1,7 +1,6 @@
 import ContentView from '../view/content-view.js';
 import SortingView from '../view/sorting-view.js';
 import NoMoviesView from '../view/no-movies-view.js';
-import MoviePresenter from './movie-presenter.js';
 import ListPresenter from './list-presenter.js';
 import ListExtraPresenter from './list-extra-presenter.js';
 import {render} from '../framework/render.js';
@@ -48,8 +47,8 @@ export default class ContentPresenter {
     this.#renderSort();
     render(this.#contentComponent, this.#container);
 
-    this.#listPresenter = new ListPresenter(this.#contentComponent, this.#renderMovieItem, this.#moviesModel);
-    this.#listExtraPresenter = new ListExtraPresenter(this.#contentComponent, this.#renderMovieItem);
+    this.#listPresenter = new ListPresenter(this.#contentComponent, this.handleChangeData, this.#handleOpenPopup);
+    this.#listExtraPresenter = new ListExtraPresenter(this.#contentComponent, this.handleChangeData, this.#handleOpenPopup);
 
     this.#listPresenter.render(this.#movies);
     this.#listExtraPresenter.render(this.#moviesModel.topRating, this.#moviesModel.topCommentsCount);
@@ -61,12 +60,6 @@ export default class ContentPresenter {
 
     this.#updateData(this.#listPresenter, updatedMovie, comments);
     this.#updateData(this.#listExtraPresenter, updatedMovie, comments);
-  };
-
-  #renderMovieItem = (movieContainer, movie) => {
-    const moviePresenter = new MoviePresenter(movieContainer, this.handleChangeData, this.#handleOpenPopup);
-    moviePresenter.init(movie);
-    return moviePresenter;
   };
 
   #renderNoMovies = () => {
@@ -110,8 +103,7 @@ export default class ContentPresenter {
     }
 
     this.#sortMovies(sortType);
-    this.#listPresenter.clear();
-    this.#listPresenter.render(this.#movies);
+    this.#listPresenter.update(this.#movies);
   };
 }
 

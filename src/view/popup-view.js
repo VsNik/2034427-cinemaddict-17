@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import AbstractView from '../framework/view/abstract-view.js';
+import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import {formattingDuration} from '../utils.js';
 
 const createDetailsTemplate = (filmInfo) => {
@@ -26,7 +26,7 @@ const createDetailsTemplate = (filmInfo) => {
   const actorsString = actors.join(', ');
   const releaseDate = dayjs(date).format('D MMMM YYYY');
   const duration = formattingDuration(runtime);
-  const genresTitle =  genre.length > 1 ? 'Genres' : 'Genre';
+  const genresTitle = genre.length > 1 ? 'Genres' : 'Genre';
   const genres = getGenres(genre);
 
   return `
@@ -134,10 +134,15 @@ const createCommentTemplate = ({emoji, text, author, date}) => {
   </li>`;
 };
 
-const createPopupTemplate = (movie, movieComments) => {
+const createPopupTemplate = ({movie, movieComments, newComment}) => {
   const {filmInfo, userDetails, comments} = movie;
   const commentsCount = comments.length;
   const commentsList = movieComments.map((it) => createCommentTemplate(it)).join('');
+
+  const newEmoji = newComment?.emoji ? `
+      <img src="images/emoji/${newComment.emoji}.png" width="55" height="55" alt="emoji-smile">
+      <input type="hidden" name="emoji" value="${newComment.emoji}">
+    ` : '';
 
   return `
   <section class="film-details">
@@ -159,7 +164,9 @@ const createPopupTemplate = (movie, movieComments) => {
           </ul>
 
           <div class="film-details__new-comment">
-            <div class="film-details__add-emoji-label"></div>
+            <div class="film-details__add-emoji-label">
+                ${newEmoji}
+            </div>
 
             <label class="film-details__comment-label">
               <textarea class="film-details__comment-input" placeholder="Select reaction below and write comment here" name="comment"></textarea>
@@ -193,23 +200,23 @@ const createPopupTemplate = (movie, movieComments) => {
   </section>`;
 };
 
-export default class PopupView extends AbstractView {
+export default class PopupView extends AbstractStatefulView {
 
-  #movie = null;
-  #comments = null;
+  #newComment = null;
+  #positionTop = 0;
 
   constructor(movie, comments) {
     super();
-    this.#movie = movie;
-    this.#comments = comments;
+    this._state = this.#parseMovieToState(movie, comments, this.#newComment);
+    this.#setInnerHandlers();
   }
 
   get template() {
-    return createPopupTemplate(this.#movie, this.#comments);
+    return createPopupTemplate(this._state);
   }
 
   setClosePopupClickHandler = (callback) => {
-    this._callback.click = callback;
+    this._callback.closeClick = callback;
     this.element.querySelector('.film-details__close-btn')
       .addEventListener('click', this.#closePopupClickHandler);
   };
@@ -232,9 +239,19 @@ export default class PopupView extends AbstractView {
       .addEventListener('click', this.#favoriteClickHandler);
   };
 
+  _restoreHandlers = () => {
+    this.#setInnerHandlers();
+    this.setClosePopupClickHandler(this._callback.closeClick);
+    this.setWatchListClickHandler(this._callback.watchListClick);
+    this.setWatchedClickHandler(this._callback.watchedClick);
+    this.setFavoriteClickHandler(this._callback.favoriteClick);
+
+    this.element.scrollTop = this.#positionTop;
+  };
+
   #closePopupClickHandler = (evt) => {
     evt.preventDefault();
-    this._callback.click();
+    this._callback.closeClick();
   };
 
   #watchListClickHandler = (evt) => {
@@ -250,6 +267,31 @@ export default class PopupView extends AbstractView {
   #favoriteClickHandler = (evt) => {
     evt.preventDefault();
     this._callback.favoriteClick();
+  };
+
+  #parseMovieToState = (movie, comments, newComment, positionTop) => ({
+    movie,
+    movieComments: comments,
+    newComment,
+    positionTop
+  });
+
+  #setInnerHandlers = () => {
+    this.element.querySelector('.film-details__emoji-list')
+      .addEventListener('click', (evt) => {
+        if (evt.target.tagName === 'INPUT') {
+          this.#changeEmojiHandler(evt);
+        }
+      });
+  };
+
+  #changeEmojiHandler = (evt) => {
+    evt.preventDefault();
+
+    this.#positionTop = this.element.scrollTop;
+    this.updateElement({
+      ...this._state, newComment: {...this.#newComment, emoji: evt.target.value}
+    });
   };
 }
 

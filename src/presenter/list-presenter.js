@@ -1,43 +1,43 @@
 import MovieListView from '../view/movie-list-view.js';
 import MovieContainerView from '../view/movie-container-view.js';
 import LoadMoreButtonView from '../view/load-more-button-view.js';
+import BaseListsPresenter from './base-lists-presenter.js';
 import {SHOW_MOVIES_COUNT} from '../constant.js';
 import {render, remove} from '../framework/render.js';
 
-export default class ListPresenter {
+export default class ListPresenter extends BaseListsPresenter{
 
   #container;
-  #renderMovie;
   #movies = [];
-  #moviePresenters = [];
   #movieListComponent = new MovieListView();
   #moviesContainerComponent = new MovieContainerView();
   #loadMoreButtonComponent = new LoadMoreButtonView();
   #renderedMovieCount = SHOW_MOVIES_COUNT;
 
-  constructor(container, renderMovie) {
+  constructor(container, handleChangeData, handleOpenPopup) {
+    super();
     this.#container = container;
-    this.#renderMovie = renderMovie;
+    this._handleChangeData = handleChangeData;
+    this._handleOpenPopup = handleOpenPopup;
 
     this.#init();
   }
 
   render = (movies) => {
     this.#movies = movies;
-    this.#renderMovies(0, this.#renderedMovieCount);
+    this._renderMovies(this.#moviesContainerComponent, this.#movies, 0, this.#renderedMovieCount);
 
     if (this.#movies.length > SHOW_MOVIES_COUNT) {
       this.#renderLoadMoreButton();
     }
   };
 
-  getMoviePresenters = () => this.#moviePresenters;
-
-  clear = () => {
-    this.#moviePresenters.forEach((presenter) => presenter.destroy());
-    this.#moviePresenters = [];
+  update = (movies) => {
+    this._moviePresenters.forEach((presenter) => presenter.destroy());
+    this._moviePresenters = [];
     this.#renderedMovieCount = SHOW_MOVIES_COUNT;
     remove(this.#loadMoreButtonComponent);
+    this.render(movies);
   };
 
   #init = () => {
@@ -45,15 +45,13 @@ export default class ListPresenter {
     render(this.#moviesContainerComponent, this.#movieListComponent.element);
   };
 
-  #renderMovies = (from, to) => {
-    this.#movies.slice(from, to).forEach((movie) => {
-      const presenter = this.#renderMovie(this.#moviesContainerComponent.element, movie);
-      this.#moviePresenters.push(presenter);
-    });
-  };
-
   #onLoadMoreButtonClick = () => {
-    this.#renderMovies(this.#renderedMovieCount, this.#renderedMovieCount + SHOW_MOVIES_COUNT);
+    this._renderMovies(
+      this.#moviesContainerComponent,
+      this.#movies,
+      this.#renderedMovieCount,
+      this.#renderedMovieCount + SHOW_MOVIES_COUNT
+    );
 
     this.#renderedMovieCount += SHOW_MOVIES_COUNT;
 
