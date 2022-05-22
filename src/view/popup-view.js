@@ -1,6 +1,5 @@
-import dayjs from 'dayjs';
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
-import {formattingDuration} from '../utils.js';
+import {formattingDuration, getRelativeDateFromNow, convertDateToString} from '../utils.js';
 
 const createDetailsTemplate = (filmInfo) => {
 
@@ -24,7 +23,7 @@ const createDetailsTemplate = (filmInfo) => {
 
   const writersString = writers.join(', ');
   const actorsString = actors.join(', ');
-  const releaseDate = dayjs(date).format('D MMMM YYYY');
+  const releaseDate = convertDateToString(date);
   const duration = formattingDuration(runtime);
   const genresTitle = genre.length > 1 ? 'Genres' : 'Genre';
   const genres = getGenres(genre);
@@ -116,7 +115,7 @@ const createControlsTemplate = (userDetails) => {
 
 const createCommentTemplate = ({emoji, text, author, date}) => {
 
-  const commentDate = dayjs(date).format('YYYY/MM/DD');
+  const commentDate = getRelativeDateFromNow(date);
 
   return `
   <li class="film-details__comment">
