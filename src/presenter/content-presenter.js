@@ -4,8 +4,7 @@ import NoMoviesView from '../view/no-movies-view.js';
 import ListPresenter from './list-presenter.js';
 import ListExtraPresenter from './list-extra-presenter.js';
 import {render} from '../framework/render.js';
-import {updateItem} from '../utils/common.js';
-import {SortType} from '../constant.js';
+import {SortType, UpdateType, UserAction} from '../constant.js';
 
 const EmptyContentMessage = {
   MOVIES: 'There are no movies in our database',
@@ -17,8 +16,6 @@ const EmptyContentMessage = {
 export default class ContentPresenter {
 
   #container;
-  #movies = [];
-  #sourceMovies = [];
   #moviesModel;
   #commentsModel;
   #listPresenter;
@@ -32,12 +29,22 @@ export default class ContentPresenter {
     this.#container = container;
     this.#moviesModel = moviesModel;
     this.#commentsModel = commentsModel;
-    this.#movies = moviesModel.movies;
-    this.#sourceMovies = [...this.#movies];
+
+    this.#moviesModel.addObserver(this.#handleModelEvent);
+  }
+
+  get movies() {
+    switch (this.#currentSortType) {
+      case SortType.DATE:
+        return this.#moviesModel.sortingDate;
+      case SortType.RATING:
+        return this.#moviesModel.sortingRating;
+    }
+    return this.#moviesModel.movies;
   }
 
   init = (handleOpenPopup, handleRefreshPopup) => {
-    if (!this.#movies.length) {
+    if (!this.movies.length) {
       this.#renderNoMovies();
     }
 
@@ -47,19 +54,34 @@ export default class ContentPresenter {
     this.#renderSort();
     render(this.#contentComponent, this.#container);
 
-    this.#listPresenter = new ListPresenter(this.#contentComponent, this.handleChangeData, this.#handleOpenPopup);
-    this.#listExtraPresenter = new ListExtraPresenter(this.#contentComponent, this.handleChangeData, this.#handleOpenPopup);
+    this.#listPresenter = new ListPresenter(this.#contentComponent, this.#handleOpenPopup, this.handleViewAction);
+    this.#listExtraPresenter = new ListExtraPresenter(this.#contentComponent, this.#handleOpenPopup, this.handleViewAction);
 
-    this.#listPresenter.render(this.#movies);
+    this.#listPresenter.render(this.movies);
     this.#listExtraPresenter.render(this.#moviesModel.topRating, this.#moviesModel.topCommentsCount);
   };
 
-  handleChangeData = (updatedMovie) => {
-    this.#movies = updateItem(this.#movies, updatedMovie);
-    const comments = this.#commentsModel.getCommentsByIds(updatedMovie.comments);
+  handleViewAction = (actionType, updateType, update) => {
+    // console.log(actionType, updateType, update);
+    switch (actionType) {
+      case UserAction.UPDATE_MOVIE:
+        this.#moviesModel.updateMovie(updateType, update);
+        break;
+    }
+  };
 
-    this.#updateData(this.#listPresenter, updatedMovie, comments);
-    this.#updateData(this.#listExtraPresenter, updatedMovie, comments);
+  #handleModelEvent = (updateType, data) => {
+    // console.log(updateType, data)
+    switch (updateType) {
+      case UpdateType.PATCH:
+        this.#updateData(this.#listPresenter, data, this.#commentsModel.getCommentsByIds(data.comments));
+        this.#updateData(this.#listExtraPresenter, data, this.#commentsModel.getCommentsByIds(data.comments));
+        this.#listPresenter.update(this.movies);
+        break;
+      case UpdateType.MINOR:
+        this.#listPresenter.update(this.movies);
+        break;
+    }
   };
 
   #renderNoMovies = () => {
@@ -75,35 +97,19 @@ export default class ContentPresenter {
 
   #updateData = (listPresenter, updatedMovie, comments) => {
     listPresenter.getMoviePresenters().forEach((presenter) => {
-      if (presenter.getMovieId() === updatedMovie.id) {
+      if (presenter.movieId === updatedMovie.id) {
         presenter.init(updatedMovie, comments);
         this.#handleRefreshPopup(updatedMovie);
       }
     });
   };
 
-  #sortMovies = (sortType) => {
-    switch (sortType) {
-      case SortType.DATE:
-        this.#movies = this.#moviesModel.sortingDate;
-        break;
-      case SortType.RATING:
-        this.#movies = this.#moviesModel.sortingRating;
-        break;
-      default:
-        this.#movies = this.#sourceMovies;
-    }
-
-    this.#currentSortType = sortType;
-  };
-
   #handleSortTypeChange = (sortType) => {
     if (this.#currentSortType === sortType) {
       return;
     }
-
-    this.#sortMovies(sortType);
-    this.#listPresenter.update(this.#movies);
+    this.#currentSortType = sortType;
+    this.#listPresenter.update(this.movies);
   };
 }
 

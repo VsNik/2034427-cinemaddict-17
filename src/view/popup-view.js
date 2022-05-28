@@ -1,5 +1,5 @@
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
-import {formattingDuration, getRelativeDateFromNow, convertDateToString} from '../utils.js';
+import {formattingDuration, getRelativeDateFromNow, convertDateToString} from '../utils/date.js';
 
 const createDetailsTemplate = (filmInfo) => {
 

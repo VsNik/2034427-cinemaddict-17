@@ -14,20 +14,21 @@ export default class ListPresenter extends BaseListsPresenter{
   #loadMoreButtonComponent = new LoadMoreButtonView();
   #renderedMovieCount = SHOW_MOVIES_COUNT;
 
-  constructor(container, handleChangeData, handleOpenPopup) {
+  constructor(container, handleOpenPopup, handleViewAction) {
     super();
     this.#container = container;
-    this._handleChangeData = handleChangeData;
+    this._handleViewAction = handleViewAction;
     this._handleOpenPopup = handleOpenPopup;
-
     this.#init();
   }
 
-  render = (movies) => {
-    this.#movies = movies;
-    this._renderMovies(this.#moviesContainerComponent, this.#movies, 0, this.#renderedMovieCount);
+  render = (moviesList) => {
+    this.#movies = moviesList;
+    const moviesCount = this.#movies.length;
+    const movies = this.#movies.slice(0, Math.min(moviesCount, SHOW_MOVIES_COUNT));
+    this._renderMovies(this.#moviesContainerComponent, movies);
 
-    if (this.#movies.length > SHOW_MOVIES_COUNT) {
+    if (moviesCount > SHOW_MOVIES_COUNT) {
       this.#renderLoadMoreButton();
     }
   };
@@ -46,16 +47,14 @@ export default class ListPresenter extends BaseListsPresenter{
   };
 
   #onLoadMoreButtonClick = () => {
-    this._renderMovies(
-      this.#moviesContainerComponent,
-      this.#movies,
-      this.#renderedMovieCount,
-      this.#renderedMovieCount + SHOW_MOVIES_COUNT
-    );
+    const moviesCount = this.#movies.length;
+    const newRenderMoviesCount = Math.min(moviesCount, this.#renderedMovieCount + SHOW_MOVIES_COUNT);
+    const movies = this.#movies.slice(this.#renderedMovieCount, newRenderMoviesCount);
 
-    this.#renderedMovieCount += SHOW_MOVIES_COUNT;
+    this._renderMovies(this.#moviesContainerComponent, movies);
+    this.#renderedMovieCount = newRenderMoviesCount;
 
-    if (this.#renderedMovieCount >= this.#movies.length) {
+    if (this.#renderedMovieCount >= moviesCount) {
       remove(this.#loadMoreButtonComponent);
     }
   };

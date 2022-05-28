@@ -1,5 +1,6 @@
 import PopupView from '../view/popup-view.js';
 import {render, remove} from '../framework/render.js';
+import {UpdateType, UserAction} from '../constant.js';
 
 const PopupStatus = {
   OPEN: 'OPEN',
@@ -28,7 +29,8 @@ export default class PopupPresenter {
 
     this.#movie = movie;
     const prevPopupComponent = this.#popupComponent;
-    this.#popupComponent = new PopupView(this.#movie, this.#commentsModel.getCommentsByIds(this.#movie.comments));
+    const comments = this.#commentsModel.getCommentsByIds(this.#movie.comments);
+    this.#popupComponent = new PopupView(this.#movie, comments);
 
     this.#popupComponent.setClosePopupClickHandler(this.#handleClosePopup);
     this.#popupComponent.setWatchListClickHandler(() => this.#handleWatchListClick(movie));
@@ -67,17 +69,17 @@ export default class PopupPresenter {
 
   #handleWatchListClick = () => {
     const newUserDetails = {...this.#movie.userDetails, watchlist: !this.#movie.userDetails.watchlist};
-    this.#changeData({...this.#movie, userDetails: newUserDetails});
+    this.#changeData(UserAction.UPDATE_MOVIE, UpdateType.PATCH, {...this.#movie, userDetails: newUserDetails});
   };
 
   #handleWatchedClick = () => {
     const newUserDetails = {...this.#movie.userDetails, alreadyWatched: !this.#movie.userDetails.alreadyWatched};
-    this.#changeData({...this.#movie, userDetails: newUserDetails});
+    this.#changeData(UserAction.UPDATE_MOVIE, UpdateType.PATCH, {...this.#movie, userDetails: newUserDetails});
   };
 
   #handleFavoriteClick = () => {
     const newUserDetails = {...this.#movie.userDetails, favorite: !this.#movie.userDetails.favorite};
-    this.#changeData({...this.#movie, userDetails: newUserDetails});
+    this.#changeData(UserAction.UPDATE_MOVIE, UpdateType.PATCH, {...this.#movie, userDetails: newUserDetails});
   };
 }
 

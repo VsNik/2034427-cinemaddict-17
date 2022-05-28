@@ -1,5 +1,6 @@
 import MovieView from '../view/movie-view.js';
 import {render, remove, replace} from '../framework/render.js';
+import {UserAction, UpdateType} from '../constant.js';
 
 export default class MoviePresenter {
 
@@ -13,6 +14,10 @@ export default class MoviePresenter {
     this.#container = container;
     this.#changeData = changeData;
     this.#handleOpenPopup = handleOpenPopup;
+  }
+
+  get movieId() {
+    return this.#movie?.id;
   }
 
   init = (movie) => {
@@ -35,25 +40,23 @@ export default class MoviePresenter {
     remove(prevMovieComponent);
   };
 
-  getMovieId = () => this.#movie?.id;
-
   destroy = () => {
     remove(this.#movieComponent);
   };
 
   #handleWatchListClick = () => {
     const newUserDetails = {...this.#movie.userDetails, watchlist: !this.#movie.userDetails.watchlist};
-    this.#changeData({...this.#movie, userDetails: newUserDetails});
+    this.#changeData(UserAction.UPDATE_MOVIE, UpdateType.PATCH, {...this.#movie, userDetails: newUserDetails});
   };
 
   #handleWatchedClick = () => {
     const newUserDetails = {...this.#movie.userDetails, alreadyWatched: !this.#movie.userDetails.alreadyWatched};
-    this.#changeData({...this.#movie, userDetails: newUserDetails});
+    this.#changeData(UserAction.UPDATE_MOVIE, UpdateType.PATCH, {...this.#movie, userDetails: newUserDetails});
   };
 
   #handleFavoriteClick = () => {
     const newUserDetails = {...this.#movie.userDetails, favorite: !this.#movie.userDetails.favorite};
-    this.#changeData({...this.#movie, userDetails: newUserDetails});
+    this.#changeData(UserAction.UPDATE_MOVIE, UpdateType.PATCH, {...this.#movie, userDetails: newUserDetails});
   };
 }
 

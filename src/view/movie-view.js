@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import AbstractView from '../framework/view/abstract-view.js';
-import {formattingDuration} from '../utils.js';
+import {formattingDuration} from '../utils/date.js';
 
 const MAX_DESCRIPTION_LENGTH = 140;
 

@@ -1,6 +1,7 @@
+import Observable from '../framework/observable.js';
 import {createComments} from '../mock/comments-mock.js';
 
-export default class CommentsModel {
+export default class CommentsModel extends Observable {
 
   #comments = createComments();
 

@@ -26,7 +26,7 @@ render(new MenuView(filters), mainElement);
 render(new StatisticsView(moviesCount), statisticElement);
 
 const contentPresenter = new ContentPresenter(mainElement, moviesModel, commentsModel);
-const popupPresenter = new PopupPresenter(document.body, commentsModel, contentPresenter.handleChangeData);
+const popupPresenter = new PopupPresenter(document.body, commentsModel, contentPresenter.handleViewAction);
 
 contentPresenter.init(popupPresenter.handleOpenPopup, popupPresenter.handleRefreshPopup);
 
