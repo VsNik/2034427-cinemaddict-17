@@ -1,5 +1,6 @@
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import {formattingDuration, getRelativeDateFromNow, convertDateToString} from '../utils/date.js';
+import he from 'he';
 
 const createDetailsTemplate = (filmInfo) => {
 
@@ -113,23 +114,24 @@ const createControlsTemplate = (userDetails) => {
   </section>`;
 };
 
-const createCommentTemplate = ({emoji, text, author, date}) => {
+const createCommentTemplate = ({id, emotion, comment, author, date}) => {
 
   const commentDate = getRelativeDateFromNow(date);
 
   return `
   <li class="film-details__comment">
     <span class="film-details__comment-emoji">
-      <img src="./images/emoji/${emoji}.png" width="55" height="55" alt="emoji-smile">
+      <img src="./images/emoji/${emotion}.png" width="55" height="55" alt="emoji-smile">
     </span>
     <div>
-      <p class="film-details__comment-text">${text}</p>
+      <p class="film-details__comment-text">${he.encode(comment)}</p>
       <p class="film-details__comment-info">
         <span class="film-details__comment-author">${author}</span>
         <span class="film-details__comment-day">${commentDate}</span>
         <button class="film-details__comment-delete">Delete</button>
       </p>
     </div>
+    <input type="hidden" name="commentId" value="${id}" />
   </li>`;
 };
 
@@ -238,6 +240,14 @@ export default class PopupView extends AbstractStatefulView {
       .addEventListener('click', this.#favoriteClickHandler);
   };
 
+  setRemoveClickHandler = (callback) => {
+    this._callback.removeCommentClick = callback;
+    this.element.querySelector('.film-details__comments-list')
+      .addEventListener('click', this.#removeCommentClickHandler);
+  };
+
+  getNewComment = () => this.#parseStateToComment(this._state);
+
   _restoreHandlers = () => {
     this.#setInnerHandlers();
     this.setClosePopupClickHandler(this._callback.closeClick);
@@ -268,6 +278,41 @@ export default class PopupView extends AbstractStatefulView {
     this._callback.favoriteClick();
   };
 
+  #removeCommentClickHandler = (evt) => {
+    evt.preventDefault();
+
+    if (evt.target.tagName === 'BUTTON') {
+      const commentId = evt.target.closest('.film-details__comment')
+        .querySelector('input[type="hidden"]').value;
+      this._callback.removeCommentClick(commentId);
+    }
+  };
+
+  #inputCommentHandler = (evt) => {
+    evt.preventDefault();
+    this._setState({...this._state, newComment: {...this._state.newComment, comment: evt.target.value}});
+  };
+
+  #changeEmojiHandler = (evt) => {
+    evt.preventDefault();
+
+    this.#positionTop = this.element.scrollTop;
+    this.updateElement({
+      ...this._state, newComment: {...this.#newComment, emoji: evt.target.value}
+    });
+  };
+
+  #parseStateToComment = (state) => {
+    const comment = {...state.newComment};
+
+    const newComment = {
+      ...comment,
+      emotion: comment.emoji
+    };
+    delete newComment.emoji;
+    return newComment;
+  };
+
   #parseMovieToState = (movie, comments, newComment, positionTop) => ({
     movie,
     movieComments: comments,
@@ -282,15 +327,8 @@ export default class PopupView extends AbstractStatefulView {
           this.#changeEmojiHandler(evt);
         }
       });
-  };
 
-  #changeEmojiHandler = (evt) => {
-    evt.preventDefault();
-
-    this.#positionTop = this.element.scrollTop;
-    this.updateElement({
-      ...this._state, newComment: {...this.#newComment, emoji: evt.target.value}
-    });
+    this.element.querySelector('.film-details__comment-input')
+      .addEventListener('input', this.#inputCommentHandler);
   };
 }
-

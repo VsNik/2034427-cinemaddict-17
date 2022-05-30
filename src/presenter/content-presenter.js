@@ -63,16 +63,20 @@ export default class ContentPresenter {
   };
 
   handleViewAction = (actionType, updateType, update) => {
-    // console.log(actionType, updateType, update);
     switch (actionType) {
       case UserAction.UPDATE_MOVIE:
         this.#moviesModel.updateMovie(updateType, update);
+        break;
+      case UserAction.REMOVE_COMMENT:
+        this.#commentsModel.removeComment(updateType, update);
+        break;
+      case UserAction.ADD_COMMENT:
+        this.#commentsModel.addComment(updateType, update);
         break;
     }
   };
 
   #handleModelEvent = (updateType, data) => {
-    // console.log(updateType, data)
     switch (updateType) {
       case UpdateType.PATCH:
         this.#listPresenter.update(this.movies, {resetRenderedMoviesCount: false});

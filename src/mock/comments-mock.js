@@ -6,9 +6,9 @@ const EMOJI = ['angry', 'puke', 'sleeping', 'smile'];
 
 const createCommentItem = (commentId) => (
   {
-    id: commentId,
-    emoji: getRandomElement(EMOJI),
-    text: getRandomElement(mockPhrases),
+    id: String(commentId),
+    emotion: getRandomElement(EMOJI),
+    comment: getRandomElement(mockPhrases),
     author: getRandomElement(mockActors),
     date: getRandomPastDate(3),
   }
