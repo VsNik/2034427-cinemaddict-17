@@ -1,60 +1,61 @@
 import ContentView from '../view/content-view.js';
 import SortingView from '../view/sorting-view.js';
-import NoMoviesView from '../view/no-movies-view.js';
 import ListPresenter from './list-presenter.js';
 import ListExtraPresenter from './list-extra-presenter.js';
-import {render} from '../framework/render.js';
-import {SortType, UpdateType, UserAction} from '../constant.js';
-
-const EmptyContentMessage = {
-  MOVIES: 'There are no movies in our database',
-  WATCHLIST: 'There are no movies to watch now',
-  HISTORY: 'There are no watched movies now',
-  FAVORITES: 'There are no favorite movies now',
-};
+import {FilterTypes, SortType, UpdateType, UserAction} from '../constant.js';
+import {remove, render, replace} from '../framework/render.js';
+import {getFilter} from '../utils/filter.js';
 
 export default class ContentPresenter {
 
   #container;
   #moviesModel;
   #commentsModel;
+  #filterModel;
   #listPresenter;
   #listExtraPresenter;
-  #contentComponent = new ContentView();
   #handleOpenPopup;
   #handleRefreshPopup;
+  #sortComponent = null;
+  #contentComponent = new ContentView();
   #currentSortType = SortType.DEFAULT;
+  #filterType = FilterTypes.ALL;
 
-  constructor(container, moviesModel, commentsModel) {
+  constructor(container, moviesModel, commentsModel, filterModel) {
     this.#container = container;
     this.#moviesModel = moviesModel;
     this.#commentsModel = commentsModel;
+    this.#filterModel = filterModel;
 
+    this.#filterModel.addObserver(this.#handleModelEvent);
     this.#moviesModel.addObserver(this.#handleModelEvent);
+    this.#commentsModel.addObserver(this.#handleModelEvent);
   }
 
   get movies() {
+    this.#filterType = this.#filterModel.filter;
+
     switch (this.#currentSortType) {
       case SortType.DATE:
-        return this.#moviesModel.sortingDate;
+        return getFilter(this.#moviesModel.sortingDate, this.#filterType);
       case SortType.RATING:
-        return this.#moviesModel.sortingRating;
+        return getFilter(this.#moviesModel.sortingRating, this.#filterType);
     }
-    return this.#moviesModel.movies;
+
+    return getFilter(this.#moviesModel.movies, this.#filterType);
   }
 
   init = (handleOpenPopup, handleRefreshPopup) => {
-    if (!this.movies.length) {
-      this.#renderNoMovies();
-    }
-
     this.#handleOpenPopup = handleOpenPopup;
     this.#handleRefreshPopup = handleRefreshPopup;
 
-    this.#renderSort();
     render(this.#contentComponent, this.#container);
 
-    this.#listPresenter = new ListPresenter(this.#contentComponent, this.#handleOpenPopup, this.handleViewAction);
+    if (this.movies.length) {
+      this.#renderSort();
+    }
+
+    this.#listPresenter = new ListPresenter(this.#contentComponent, this.#handleOpenPopup, this.handleViewAction, this.#filterModel);
     this.#listExtraPresenter = new ListExtraPresenter(this.#contentComponent, this.#handleOpenPopup, this.handleViewAction);
 
     this.#listPresenter.render(this.movies);
@@ -74,25 +75,14 @@ export default class ContentPresenter {
     // console.log(updateType, data)
     switch (updateType) {
       case UpdateType.PATCH:
-        this.#updateData(this.#listPresenter, data, this.#commentsModel.getCommentsByIds(data.comments));
+        this.#listPresenter.update(this.movies, {resetRenderedMoviesCount: false});
         this.#updateData(this.#listExtraPresenter, data, this.#commentsModel.getCommentsByIds(data.comments));
-        this.#listPresenter.update(this.movies);
         break;
       case UpdateType.MINOR:
         this.#listPresenter.update(this.movies);
+        this.#updateSort();
         break;
     }
-  };
-
-  #renderNoMovies = () => {
-    const noMoviesComponent = new NoMoviesView(EmptyContentMessage.MOVIES);
-    render(noMoviesComponent, this.#container);
-  };
-
-  #renderSort = () => {
-    const sortComponent = new SortingView();
-    render(sortComponent, this.#container);
-    sortComponent.setSortTypeChangeHandler(this.#handleSortTypeChange);
   };
 
   #updateData = (listPresenter, updatedMovie, comments) => {
@@ -104,12 +94,40 @@ export default class ContentPresenter {
     });
   };
 
+  #renderSort = () => {
+    const prevSortComponent = this.#sortComponent;
+    this.#sortComponent = new SortingView(this.#currentSortType);
+    this.#sortComponent.setSortTypeChangeHandler(this.#handleSortTypeChange);
+
+    if (prevSortComponent === null) {
+      this.#contentComponent.element.before(this.#sortComponent.element);
+      return;
+    }
+
+    replace(this.#sortComponent, prevSortComponent);
+    remove(prevSortComponent);
+  };
+
+  #updateSort = () => {
+    this.#currentSortType = SortType.DEFAULT;
+
+    if (!this.movies.length) {
+      remove(this.#sortComponent);
+      this.#sortComponent = null;
+      return;
+    }
+
+    this.#renderSort();
+  };
+
   #handleSortTypeChange = (sortType) => {
     if (this.#currentSortType === sortType) {
       return;
     }
+
     this.#currentSortType = sortType;
     this.#listPresenter.update(this.movies);
+    this.#renderSort();
   };
 }
 

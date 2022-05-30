@@ -4,6 +4,7 @@ export const MOVIES_RATED_COUNT = 2;
 export const MOVIES_COMMENTED_COUNT = 2;
 
 export const UserRang = {
+  NONE: '',
   NOVICE: 'Novice',
   FAN: 'Fan',
   MOVIE_BUFF: 'Movie Buff',

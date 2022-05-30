@@ -20,22 +20,29 @@ export default class ListExtraPresenter extends BaseListsPresenter {
     this._handleViewAction = handleViewAction;
     this._handleOpenPopup = handleOpenPopup;
 
-    this.#init();
+    this.#ratedContainerComponent = new MovieContainerView();
+    this.#commentedContainerComponent = new MovieContainerView();
   }
 
   render = (moviesRated, moviesComments) => {
-    this._renderMovies(this.#ratedContainerComponent, moviesRated);
-    this._renderMovies(this.#commentedContainerComponent, moviesComments);
+    if (moviesRated.length) {
+      this.#initRated();
+      this._renderMovies(this.#ratedContainerComponent, moviesRated);
+    }
+    if (moviesComments.length) {
+      this.#initCommented();
+      this._renderMovies(this.#commentedContainerComponent, moviesComments);
+    }
   };
 
-  #init = () => {
+  #initRated = () => {
     const ratedListComponent = new MovieListExtraView(Titles.RATED);
-    this.#ratedContainerComponent = new MovieContainerView();
     render(ratedListComponent, this.#container.element);
     render(this.#ratedContainerComponent, ratedListComponent.element);
+  };
 
+  #initCommented = () => {
     const commentedListComponent = new MovieListExtraView(Titles.COMMENTED);
-    this.#commentedContainerComponent = new MovieContainerView();
     render(commentedListComponent, this.#container.element);
     render(this.#commentedContainerComponent, commentedListComponent.element);
   };

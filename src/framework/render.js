@@ -65,6 +65,7 @@ const replace = (newComponent, oldComponent) => {
  * @param {AbstractView} component Компонент, который нужно удалить
  */
 const remove = (component) => {
+
   if (component === null) {
     return;
   }
