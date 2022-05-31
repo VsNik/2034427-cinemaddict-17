@@ -17,7 +17,7 @@ export default class MoviePresenter {
   }
 
   get movieId() {
-    return this.#movie?.id;
+    return this.#movie.id;
   }
 
   init = (movie) => {

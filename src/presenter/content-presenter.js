@@ -80,6 +80,7 @@ export default class ContentPresenter {
     switch (updateType) {
       case UpdateType.PATCH:
         this.#listPresenter.update(this.movies, {resetRenderedMoviesCount: false});
+        this.#updateData(this.#listPresenter, data, this.#commentsModel.getCommentsByIds(data.comments));
         this.#updateData(this.#listExtraPresenter, data, this.#commentsModel.getCommentsByIds(data.comments));
         break;
       case UpdateType.MINOR:
