@@ -26,7 +26,7 @@ export const getRandomCommentsIds = (totalComments, commentsToMovie) => {
   while (commentsIds.length !== commentsToMovie) {
     const item = generateRandomInt(1, totalComments);
     if (!commentsIds.includes(item)) {
-      commentsIds.push(item);
+      commentsIds.push(String(item));
     }
   }
 

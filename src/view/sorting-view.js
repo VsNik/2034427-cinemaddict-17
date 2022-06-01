@@ -1,5 +1,5 @@
-import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import {SortType} from '../constant.js';
+import AbstractView from '../framework/view/abstract-view.js';
 
 const createSortingTemplate = (sortType) => `
   <ul class="sort">
@@ -8,24 +8,22 @@ const createSortingTemplate = (sortType) => `
     <li><a href="#" class="sort__button ${sortType === SortType.RATING ? 'sort__button--active' : ''}" data-sort-type="${SortType.RATING}">Sort by rating</a></li>
   </ul>`;
 
-export default class SortingView extends AbstractStatefulView {
+export default class SortingView extends AbstractView {
 
-  constructor() {
+  #currentSort;
+
+  constructor(sortType) {
     super();
-    this._state = {...this._state, currentSortType: SortType.DEFAULT};
+    this.#currentSort = sortType;
   }
 
   get template() {
-    return createSortingTemplate(this._state.currentSortType);
+    return createSortingTemplate(this.#currentSort);
   }
 
   setSortTypeChangeHandler = (callback) => {
     this._callback.sortTypeChange = callback;
     this.element.addEventListener('click', this.#sortTypeChangeHandler);
-  };
-
-  _restoreHandlers = () => {
-    this.setSortTypeChangeHandler(this._callback.sortTypeChange);
   };
 
   #sortTypeChangeHandler = (evt) => {
@@ -35,7 +33,6 @@ export default class SortingView extends AbstractStatefulView {
 
     evt.preventDefault();
     this._callback.sortTypeChange(evt.target.dataset.sortType);
-    this.updateElement({...this._state, currentSortType: evt.target.dataset.sortType});
   };
 }
 
