@@ -1,7 +1,7 @@
 import MovieListExtraView from '../view/movie-list-extra-view';
 import MovieContainerView from '../view/movie-container-view';
 import BaseListsPresenter from './base-lists-presenter.js';
-import {render} from '../framework/render.js';
+import {remove, render} from '../framework/render.js';
 
 const Titles = {
   RATED: 'Top rated',
@@ -13,6 +13,8 @@ export default class ListExtraPresenter extends BaseListsPresenter {
   #container;
   #ratedContainerComponent;
   #commentedContainerComponent;
+  #ratedListComponent;
+  #commentedListComponent;
 
   constructor(container, handleOpenPopup, handleViewAction) {
     super();
@@ -20,8 +22,8 @@ export default class ListExtraPresenter extends BaseListsPresenter {
     this._handleViewAction = handleViewAction;
     this._handleOpenPopup = handleOpenPopup;
 
-    this.#ratedContainerComponent = new MovieContainerView();
-    this.#commentedContainerComponent = new MovieContainerView();
+    this.#ratedListComponent = new MovieListExtraView(Titles.RATED);
+    this.#commentedListComponent = new MovieListExtraView(Titles.COMMENTED);
   }
 
   render = (moviesRated, moviesComments) => {
@@ -35,15 +37,23 @@ export default class ListExtraPresenter extends BaseListsPresenter {
     }
   };
 
+  update = (moviesRated, moviesComments) => {
+    this._moviePresenters.forEach((presenter) => presenter.destroy());
+    this._moviePresenters = [];
+    remove(this.#ratedListComponent);
+    remove(this.#commentedListComponent);
+    this.render(moviesRated, moviesComments);
+  };
+
   #initRated = () => {
-    const ratedListComponent = new MovieListExtraView(Titles.RATED);
-    render(ratedListComponent, this.#container.element);
-    render(this.#ratedContainerComponent, ratedListComponent.element);
+    this.#ratedContainerComponent = new MovieContainerView();
+    render(this.#ratedListComponent, this.#container.element);
+    render(this.#ratedContainerComponent, this.#ratedListComponent.element);
   };
 
   #initCommented = () => {
-    const commentedListComponent = new MovieListExtraView(Titles.COMMENTED);
-    render(commentedListComponent, this.#container.element);
-    render(this.#commentedContainerComponent, commentedListComponent.element);
+    this.#commentedContainerComponent = new MovieContainerView();
+    render(this.#commentedListComponent, this.#container.element);
+    render(this.#commentedContainerComponent, this.#commentedListComponent.element);
   };
 }

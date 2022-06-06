@@ -3,6 +3,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import duration from 'dayjs/plugin/duration';
 
 const DATE_STRING_FORMAT = 'D MMMM YYYY';
+const TIME_METRIC = 'minutes';
 
 const DurationTemplates = {
   MINUTES: 'm[m]',
@@ -17,7 +18,7 @@ export const getRelativeDateFromNow = (date) => {
 
 export const formattingDuration = (runtime) => {
   dayjs.extend(duration);
-  const timeDuration = dayjs.duration(runtime, 'minutes');
+  const timeDuration = dayjs.duration(runtime, TIME_METRIC);
   if ((runtime / 60) < 1) {
     return  timeDuration.format(DurationTemplates.MINUTES);
   }
@@ -29,3 +30,4 @@ export const formattingDuration = (runtime) => {
 
 export const convertDateToString = (date) =>
   dayjs(date).format(DATE_STRING_FORMAT);
+

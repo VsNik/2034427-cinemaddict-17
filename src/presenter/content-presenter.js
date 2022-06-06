@@ -1,10 +1,17 @@
 import ContentView from '../view/content-view.js';
 import SortingView from '../view/sorting-view.js';
+import LoadingView from '../view/loading-view.js';
 import ListPresenter from './list-presenter.js';
 import ListExtraPresenter from './list-extra-presenter.js';
 import {FilterTypes, SortType, UpdateType, UserAction} from '../constant.js';
-import {remove, render, replace} from '../framework/render.js';
+import {remove, render, RenderPosition, replace} from '../framework/render.js';
 import {getFilter} from '../utils/filter.js';
+import UiBlocker from '../framework/ui-blocker/ui-blocker.js';
+
+const TimeLimit = {
+  LOWER_LIMIT: 50,
+  UPPER_LIMIT: 600,
+};
 
 export default class ContentPresenter {
 
@@ -16,10 +23,13 @@ export default class ContentPresenter {
   #listExtraPresenter;
   #handleOpenPopup;
   #handleRefreshPopup;
+  #handlePopupIsAborting;
   #sortComponent = null;
+  #loadingComponent = new LoadingView();
   #contentComponent = new ContentView();
   #currentSortType = SortType.DEFAULT;
   #filterType = FilterTypes.ALL;
+  #uiBlocker = new UiBlocker(TimeLimit.LOWER_LIMIT, TimeLimit.UPPER_LIMIT);
 
   constructor(container, moviesModel, commentsModel, filterModel) {
     this.#container = container;
@@ -45,12 +55,46 @@ export default class ContentPresenter {
     return getFilter(this.#moviesModel.movies, this.#filterType);
   }
 
-  init = (handleOpenPopup, handleRefreshPopup) => {
+  init = (handleOpenPopup, handleRefreshPopup, handlePopupIsAborting) => {
     this.#handleOpenPopup = handleOpenPopup;
     this.#handleRefreshPopup = handleRefreshPopup;
+    this.#handlePopupIsAborting = handlePopupIsAborting;
 
     render(this.#contentComponent, this.#container);
+    this.#renderLoading();
+  };
 
+  handleViewAction = async (actionType, updateType, update) => {
+    this.#uiBlocker.block();
+    switch (actionType) {
+      case UserAction.UPDATE_MOVIE:
+        try {
+          await this.#moviesModel.updateMovie(updateType, update);
+        } catch (err) {
+          this.#setMovieAborting(this.#listExtraPresenter, update.id);
+          this.#setMovieAborting(this.#listPresenter, update.id);
+          this.#handlePopupIsAborting();
+        }
+        break;
+      case UserAction.REMOVE_COMMENT:
+        try {
+          await this.#commentsModel.removeComment(updateType, update);
+        } catch (err) {
+          this.#handlePopupIsAborting();
+        }
+        break;
+      case UserAction.ADD_COMMENT:
+        try {
+          await this.#commentsModel.addComment(updateType, update);
+        } catch (err) {
+          this.#handlePopupIsAborting();
+        }
+        break;
+    }
+    this.#uiBlocker.unblock();
+  };
+
+  #renderContent = () => {
     if (this.movies.length) {
       this.#renderSort();
     }
@@ -62,30 +106,37 @@ export default class ContentPresenter {
     this.#listExtraPresenter.render(this.#moviesModel.topRating, this.#moviesModel.topCommentsCount);
   };
 
-  handleViewAction = (actionType, updateType, update) => {
-    switch (actionType) {
-      case UserAction.UPDATE_MOVIE:
-        this.#moviesModel.updateMovie(updateType, update);
+  #setMovieAborting = (listPresenter, movieId) => {
+    for (const presenter of listPresenter.getMoviePresenters()) {
+      if (presenter.movieId === movieId) {
+        presenter.handleIsAborting();
         break;
-      case UserAction.REMOVE_COMMENT:
-        this.#commentsModel.removeComment(updateType, update);
-        break;
-      case UserAction.ADD_COMMENT:
-        this.#commentsModel.addComment(updateType, update);
-        break;
+      }
     }
   };
 
   #handleModelEvent = (updateType, data) => {
     switch (updateType) {
       case UpdateType.PATCH:
+        this.#updateData(this.#listPresenter, data, this.#commentsModel.comments);
+        this.#updateData(this.#listExtraPresenter, data, this.#commentsModel.comments);
         this.#listPresenter.update(this.movies, {resetRenderedMoviesCount: false});
-        this.#updateData(this.#listPresenter, data, this.#commentsModel.getCommentsByIds(data.comments));
-        this.#updateData(this.#listExtraPresenter, data, this.#commentsModel.getCommentsByIds(data.comments));
+        this.#listExtraPresenter.update(this.#moviesModel.topRating, this.#moviesModel.topCommentsCount);
+        this.#updateSort();
         break;
       case UpdateType.MINOR:
         this.#listPresenter.update(this.movies);
-        this.#updateSort();
+        this.#updateSort({resetSort: true});
+        break;
+      case UpdateType.MAJOR:
+        this.#listPresenter.update(this.movies, {resetRenderedMoviesCount: false});
+        this.#listExtraPresenter.update(this.#moviesModel.topRating, this.#moviesModel.topCommentsCount);
+        this.#updateData(this.#listPresenter, this.#commentsModel.commentedMovie, this.#commentsModel.comments);
+        this.#updateData(this.#listExtraPresenter, this.#commentsModel.commentedMovie, this.#commentsModel.comments);
+        break;
+      case UpdateType.INIT:
+        remove(this.#loadingComponent);
+        this.#renderContent();
         break;
     }
   };
@@ -97,6 +148,10 @@ export default class ContentPresenter {
         this.#handleRefreshPopup(updatedMovie);
       }
     });
+  };
+
+  #renderLoading = () => {
+    render(this.#loadingComponent, this.#contentComponent.element, RenderPosition.AFTERBEGIN);
   };
 
   #renderSort = () => {
@@ -113,8 +168,10 @@ export default class ContentPresenter {
     remove(prevSortComponent);
   };
 
-  #updateSort = () => {
-    this.#currentSortType = SortType.DEFAULT;
+  #updateSort = ({resetSort = false} = {}) => {
+    if (resetSort) {
+      this.#currentSortType = SortType.DEFAULT;
+    }
 
     if (!this.movies.length) {
       remove(this.#sortComponent);

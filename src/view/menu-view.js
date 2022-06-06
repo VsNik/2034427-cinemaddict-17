@@ -10,7 +10,7 @@ const createMenuTemplate = (filters, currentFilterType) => {
         data-filter-type="${filter.name}"
     >
         ${filter.name}
-        <span class="main-navigation__item-count">${filter.count}</span>
+        <span class="main-navigation__item-count" data-filter-type="${filter.name}">${filter.count}</span>
     </a>`
   )).join('');
 
@@ -49,7 +49,7 @@ export default class MenuView extends AbstractView{
 
   #filterTypeChangeHandler = (evt) => {
     evt.preventDefault();
-    if (evt.target.tagName === 'A') {
+    if (evt.target.tagName === 'A' || evt.target.tagName === 'SPAN') {
       this._callback.filterTypeChange(evt.target.dataset.filterType);
     }
   };
