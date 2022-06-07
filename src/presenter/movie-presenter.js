@@ -44,6 +44,10 @@ export default class MoviePresenter {
     remove(this.#movieComponent);
   };
 
+  handleIsAborting = () => {
+    this.#movieComponent.shake();
+  };
+
   #handleWatchListClick = () => {
     const newUserDetails = {...this.#movie.userDetails, watchlist: !this.#movie.userDetails.watchlist};
     this.#changeData(UserAction.UPDATE_MOVIE, UpdateType.PATCH, {...this.#movie, userDetails: newUserDetails});

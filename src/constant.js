@@ -1,4 +1,3 @@
-export const MOVIES_COUNT = 17;
 export const SHOW_MOVIES_COUNT = 5;
 export const MOVIES_RATED_COUNT = 2;
 export const MOVIES_COMMENTED_COUNT = 2;
@@ -33,5 +32,6 @@ export const UpdateType = {
   PATCH: 'PATCH',
   MINOR: 'MINOR',
   MAJOR: 'MAJOR',
+  INIT: 'INIT',
 };
 
