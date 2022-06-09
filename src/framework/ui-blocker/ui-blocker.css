@@ -8,7 +8,7 @@
   left: 0;
   z-index: 1000;
   cursor: wait;
-  background-color: rgba(255, 255, 255, 0.5);
+  background-color: rgba(0, 0, 0, 0.4);
 }
 
 .ui-blocker::before {

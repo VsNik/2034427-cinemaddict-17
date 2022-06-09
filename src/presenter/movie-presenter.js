@@ -45,7 +45,7 @@ export default class MoviePresenter {
   };
 
   handleIsAborting = () => {
-    this.#movieComponent.shake();
+    this.#movieComponent.runShake();
   };
 
   #handleWatchListClick = () => {

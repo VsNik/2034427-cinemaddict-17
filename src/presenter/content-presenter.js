@@ -3,10 +3,12 @@ import SortingView from '../view/sorting-view.js';
 import LoadingView from '../view/loading-view.js';
 import ListPresenter from './list-presenter.js';
 import ListExtraPresenter from './list-extra-presenter.js';
+import UiBlocker from '../framework/ui-blocker/ui-blocker.js';
 import {FilterTypes, SortType, UpdateType, UserAction} from '../constant.js';
 import {remove, render, RenderPosition, replace} from '../framework/render.js';
 import {getFilter} from '../utils/filter.js';
-import UiBlocker from '../framework/ui-blocker/ui-blocker.js';
+
+const MIN_MOVIES_TO_SORT = 2;
 
 const TimeLimit = {
   LOWER_LIMIT: 50,
@@ -22,7 +24,7 @@ export default class ContentPresenter {
   #listPresenter;
   #listExtraPresenter;
   #handleOpenPopup;
-  #handleRefreshPopup;
+  #handleUpdatePopup;
   #handlePopupIsAborting;
   #sortComponent = null;
   #loadingComponent = new LoadingView();
@@ -55,9 +57,9 @@ export default class ContentPresenter {
     return getFilter(this.#moviesModel.movies, this.#filterType);
   }
 
-  init = (handleOpenPopup, handleRefreshPopup, handlePopupIsAborting) => {
+  init = (handleOpenPopup, handleUpdatePopup, handlePopupIsAborting) => {
     this.#handleOpenPopup = handleOpenPopup;
-    this.#handleRefreshPopup = handleRefreshPopup;
+    this.#handleUpdatePopup = handleUpdatePopup;
     this.#handlePopupIsAborting = handlePopupIsAborting;
 
     render(this.#contentComponent, this.#container);
@@ -65,7 +67,6 @@ export default class ContentPresenter {
   };
 
   handleViewAction = async (actionType, updateType, update) => {
-    this.#uiBlocker.block();
     switch (actionType) {
       case UserAction.UPDATE_MOVIE:
         try {
@@ -78,6 +79,7 @@ export default class ContentPresenter {
         break;
       case UserAction.REMOVE_COMMENT:
         try {
+          this.#uiBlocker.block();
           await this.#commentsModel.removeComment(updateType, update);
         } catch (err) {
           this.#handlePopupIsAborting();
@@ -85,6 +87,7 @@ export default class ContentPresenter {
         break;
       case UserAction.ADD_COMMENT:
         try {
+          this.#uiBlocker.block();
           await this.#commentsModel.addComment(updateType, update);
         } catch (err) {
           this.#handlePopupIsAborting();
@@ -118,6 +121,7 @@ export default class ContentPresenter {
   #handleModelEvent = (updateType, data) => {
     switch (updateType) {
       case UpdateType.PATCH:
+        this.#handleUpdatePopup(data);
         this.#updateData(this.#listPresenter, data, this.#commentsModel.comments);
         this.#updateData(this.#listExtraPresenter, data, this.#commentsModel.comments);
         this.#listPresenter.update(this.movies, {resetRenderedMoviesCount: false});
@@ -125,10 +129,11 @@ export default class ContentPresenter {
         this.#updateSort();
         break;
       case UpdateType.MINOR:
-        this.#listPresenter.update(this.movies);
         this.#updateSort({resetSort: true});
+        this.#listPresenter.update(this.movies);
         break;
       case UpdateType.MAJOR:
+        this.#handleUpdatePopup(this.#commentsModel.commentedMovie);
         this.#listPresenter.update(this.movies, {resetRenderedMoviesCount: false});
         this.#listExtraPresenter.update(this.#moviesModel.topRating, this.#moviesModel.topCommentsCount);
         this.#updateData(this.#listPresenter, this.#commentsModel.commentedMovie, this.#commentsModel.comments);
@@ -145,7 +150,6 @@ export default class ContentPresenter {
     listPresenter.getMoviePresenters().forEach((presenter) => {
       if (presenter.movieId === updatedMovie.id) {
         presenter.init(updatedMovie, comments);
-        this.#handleRefreshPopup(updatedMovie);
       }
     });
   };
@@ -160,7 +164,7 @@ export default class ContentPresenter {
     this.#sortComponent.setSortTypeChangeHandler(this.#handleSortTypeChange);
 
     if (prevSortComponent === null) {
-      this.#contentComponent.element.before(this.#sortComponent.element);
+      render(this.#sortComponent, this.#contentComponent.element, RenderPosition.AFTERBEGIN);
       return;
     }
 
@@ -173,7 +177,7 @@ export default class ContentPresenter {
       this.#currentSortType = SortType.DEFAULT;
     }
 
-    if (!this.movies.length) {
+    if (this.movies.length < MIN_MOVIES_TO_SORT) {
       remove(this.#sortComponent);
       this.#sortComponent = null;
       return;

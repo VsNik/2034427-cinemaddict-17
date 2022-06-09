@@ -1,7 +1,10 @@
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import {formattingDuration, getRelativeDateFromNow, convertDateToString} from '../utils/date.js';
-import {encodeText, sortByDateDesc} from '../utils/common.js';
+import {debounce, encodeText, sortByDateDesc} from '../utils/common.js';
 import {shake} from '../utils/shake-effect';
+import {CheckType} from '../constant.js';
+
+const OFFSET_TOP = 80;
 
 const createDetailsTemplate = (filmInfo) => {
 
@@ -82,7 +85,7 @@ const createDetailsTemplate = (filmInfo) => {
   </div>`;
 };
 
-const createControlsTemplate = (userDetails) => {
+const createControlsTemplate = (userDetails, isChangingType, isSaving) => {
 
   const {watchlist, alreadyWatched, favorite} = userDetails;
 
@@ -93,35 +96,38 @@ const createControlsTemplate = (userDetails) => {
       class="film-details__control-button film-details__control-button--watchlist ${watchlist ? 'film-details__control-button--active' : ''}"
       id="watchlist"
       name="watchlist"
+      ${isChangingType || isSaving ? 'disabled' : ''}
     >
-      Add to watchlist
+        ${isChangingType === CheckType.WATCH_LIST ? 'Changing...' : 'Add to watchlist'}
     </button>
     <button
       type="button"
       class="film-details__control-button film-details__control-button--watched ${alreadyWatched ? 'film-details__control-button--active' : ''}"
       id="watched"
       name="watched"
+      ${isChangingType || isSaving ? 'disabled' : ''}
     >
-      Already watched
+        ${isChangingType === CheckType.WATCHED ? 'Changing...' : 'Already watched'}
     </button>
     <button
       type="button"
       class="film-details__control-button film-details__control-button--favorite ${favorite ? 'film-details__control-button--active' : ''}"
       id="favorite"
       name="favorite"
+      ${isChangingType || isSaving ? 'disabled' : ''}
     >
-      Add to favorites
+        ${isChangingType === CheckType.FAVORITE ? 'Changing...' : 'Add to favorites'}
     </button>
   </section>`;
 };
 
-const createCommentTemplate = ({id, emotion, comment, author, date}, isDeletingComment, isDisabled) => {
+const createCommentTemplate = ({id, emotion, comment, author, date}, isDeletingComment, isSaving) => {
 
   const commentDate = getRelativeDateFromNow(date);
   const encodedComment = encodeText(comment);
 
   return `
-  <li class="film-details__comment">
+  <li class="film-details__comment" id="comment_${id}">
     <span class="film-details__comment-emoji">
       <img src="./images/emoji/${emotion}.png" width="55" height="55" alt="emoji-smile">
     </span>
@@ -132,7 +138,7 @@ const createCommentTemplate = ({id, emotion, comment, author, date}, isDeletingC
         <span class="film-details__comment-day">${commentDate}</span>
         <button
             class="film-details__comment-delete"
-            ${isDisabled ? 'disabled' : ''}
+            ${isDeletingComment === id || isSaving ? 'disabled' : ''}
         >
             ${isDeletingComment === id ? 'Deleting...' : 'Delete'}
         </button>
@@ -142,13 +148,13 @@ const createCommentTemplate = ({id, emotion, comment, author, date}, isDeletingC
   </li>`;
 };
 
-const createPopupTemplate = ({movie, movieComments, newComment, isSaving, isDeletingComment, isDisabled}) => {
+const createPopupTemplate = ({movie, movieComments, newComment, isSaving, isDeletingComment, isChangingType}) => {
   const {filmInfo, userDetails, comments} = movie;
   const commentsCount = comments.length;
 
   const getCommentsList = (commentary) => {
     const sortedComments = sortByDateDesc([...commentary]);
-    return sortedComments.map((it) => createCommentTemplate(it, isDeletingComment, isDisabled)).join('');
+    return sortedComments.map((it) => createCommentTemplate(it, isDeletingComment, isSaving)).join('');
   };
 
   const commentsList = getCommentsList(movieComments);
@@ -163,10 +169,10 @@ const createPopupTemplate = ({movie, movieComments, newComment, isSaving, isDele
     <form class="film-details__inner" action="" method="get">
       <div class="film-details__top-container">
         <div class="film-details__close">
-          <button class="film-details__close-btn" type="button" ${isDisabled ? 'disabled' : ''}>close</button>
+          <button class="film-details__close-btn" type="button" ${isSaving ? 'disabled' : ''}>close</button>
         </div>
         ${createDetailsTemplate(filmInfo)}
-        ${createControlsTemplate(userDetails)}
+        ${createControlsTemplate(userDetails, isChangingType, isSaving)}
       </div>
 
       <div class="film-details__bottom-container">
@@ -178,7 +184,7 @@ const createPopupTemplate = ({movie, movieComments, newComment, isSaving, isDele
           </ul>
 
           <div class="film-details__new-comment">
-            <div class="film-details__add-emoji-label">
+            <div class="film-details__add-emoji-label" style="background-color: ${isSaving ? 'gray' : ''}">
                 ${newEmoji}
             </div>
 
@@ -188,26 +194,59 @@ const createPopupTemplate = ({movie, movieComments, newComment, isSaving, isDele
                 placeholder="Select reaction below and write comment here"
                 name="comment"
                 ${isSaving ? 'disabled' : ''}
+                style="background-color: ${isSaving ? 'gray' : ''}"
               ></textarea>
             </label>
 
             <div class="film-details__emoji-list">
-              <input class="film-details__emoji-item visually-hidden" name="comment-emoji" type="radio" id="emoji-smile" value="smile" ${isSaving ? 'disabled' : ''}>
+              <input
+                class="film-details__emoji-item visually-hidden"
+                name="comment-emoji"
+                type="radio"
+                id="emoji-smile"
+                value="smile"
+                ${isSaving ? 'disabled' : ''}
+                ${newComment?.emoji === 'smile' ? 'checked' : ''}
+              >
               <label class="film-details__emoji-label" for="emoji-smile">
                 <img src="./images/emoji/smile.png" width="30" height="30" alt="emoji">
               </label>
 
-              <input class="film-details__emoji-item visually-hidden" name="comment-emoji" type="radio" id="emoji-sleeping" value="sleeping" ${isSaving ? 'disabled' : ''}>
+              <input
+                class="film-details__emoji-item visually-hidden"
+                name="comment-emoji"
+                type="radio"
+                id="emoji-sleeping"
+                value="sleeping"
+                ${isSaving ? 'disabled' : ''}
+                ${newComment?.emoji === 'sleeping' ? 'checked' : ''}
+              >
               <label class="film-details__emoji-label" for="emoji-sleeping">
                 <img src="./images/emoji/sleeping.png" width="30" height="30" alt="emoji">
               </label>
 
-              <input class="film-details__emoji-item visually-hidden" name="comment-emoji" type="radio" id="emoji-puke" value="puke" ${isSaving ? 'disabled' : ''}>
+              <input
+                class="film-details__emoji-item visually-hidden"
+                name="comment-emoji"
+                type="radio"
+                id="emoji-puke"
+                value="puke"
+                ${isSaving ? 'disabled' : ''}
+                ${newComment?.emoji === 'puke' ? 'checked' : ''}
+              >
               <label class="film-details__emoji-label" for="emoji-puke">
                 <img src="./images/emoji/puke.png" width="30" height="30" alt="emoji">
               </label>
 
-              <input class="film-details__emoji-item visually-hidden" name="comment-emoji" type="radio" id="emoji-angry" value="angry" ${isSaving ? 'disabled' : ''}>
+              <input
+                class="film-details__emoji-item visually-hidden"
+                name="comment-emoji"
+                type="radio"
+                id="emoji-angry"
+                value="angry"
+                ${isSaving ? 'disabled' : ''}
+                ${newComment?.emoji === 'angry' ? 'checked' : ''}
+              >
               <label class="film-details__emoji-label" for="emoji-angry">
                 <img src="./images/emoji/angry.png" width="30" height="30" alt="emoji">
               </label>
@@ -265,16 +304,25 @@ export default class PopupView extends AbstractStatefulView {
 
   getNewComment = () => this.#parseStateToComment(this._state);
 
+  update = (update) => {
+    if (this._state.isSaving && update.success) {
+      const commentsElementPositionTop = this.element.querySelector('.film-details__comments-list').offsetTop;
+      this.#positionTop = commentsElementPositionTop - OFFSET_TOP;
+    }
+    delete update.success;
+    this.updateElement(update);
+  };
+
   runShakeEffect = (callback) => {
     let element;
     if (this._state.isDeletingComment) {
-      element = this.element.querySelector('.film-details__comments-list');
+      element = this.element.querySelector(`#comment_${this._state.isDeletingComment}`);
     }
-    if (this._state.isChanging) {
-      element = this.element.querySelector('.film-details__controls');
+    if (this._state.isChangingType) {
+      element = this.#getCheckElement(this._state.isChangingType);
     }
     if (this._state.isSaving) {
-      element = this.element.querySelector('.film-details__new-comment');
+      element = this.element.querySelector('form');
     }
     shake(element, callback);
   };
@@ -295,6 +343,19 @@ export default class PopupView extends AbstractStatefulView {
     }
   };
 
+  #getCheckElement = (checkType) => {
+    switch (checkType) {
+      case CheckType.WATCH_LIST:
+        return this.element.querySelector('.film-details__controls #watchlist');
+      case CheckType.WATCHED:
+        return this.element.querySelector('.film-details__controls #watched');
+      case CheckType.FAVORITE:
+        return this.element.querySelector('.film-details__controls #favorite');
+      default:
+        return null;
+    }
+  };
+
   #closePopupClickHandler = (evt) => {
     evt.preventDefault();
     this._callback.closeClick();
@@ -302,26 +363,22 @@ export default class PopupView extends AbstractStatefulView {
 
   #watchListClickHandler = (evt) => {
     evt.preventDefault();
-    this.#positionTop = this.element.scrollTop;
     this._callback.watchListClick();
   };
 
   #watchedClickHandler = (evt) => {
     evt.preventDefault();
-    this.#positionTop = this.element.scrollTop;
     this._callback.watchedClick();
   };
 
   #favoriteClickHandler = (evt) => {
     evt.preventDefault();
-    this.#positionTop = this.element.scrollTop;
     this._callback.favoriteClick();
   };
 
   #removeCommentClickHandler = (evt) => {
     evt.preventDefault();
 
-    this.#positionTop = this.element.scrollTop;
     if (evt.target.tagName === 'BUTTON') {
       const commentId = evt.target.closest('.film-details__comment')
         .querySelector('input[type="hidden"]').value;
@@ -332,7 +389,6 @@ export default class PopupView extends AbstractStatefulView {
   #inputCommentHandler = (evt) => {
     evt.preventDefault();
 
-    this.#positionTop = this.element.scrollTop;
     this._setState({
       ...this._state, newComment: {...this._state.newComment, comment: evt.target.value}
     });
@@ -341,7 +397,6 @@ export default class PopupView extends AbstractStatefulView {
   #changeEmojiHandler = (evt) => {
     evt.preventDefault();
 
-    this.#positionTop = this.element.scrollTop;
     this.updateElement({
       ...this._state, newComment: {...this._state.newComment, emoji: evt.target.value}
     });
@@ -363,8 +418,7 @@ export default class PopupView extends AbstractStatefulView {
     movieComments: comments,
     newComment,
     positionTop,
-    isDisabled: false,
-    isChanging: false,
+    isChangingType: null,
     isSaving: false,
     isDeletingComment: null,
   });
@@ -378,6 +432,8 @@ export default class PopupView extends AbstractStatefulView {
       });
 
     this.element.querySelector('.film-details__comment-input')
-      .addEventListener('input',(evt) =>  this.#inputCommentHandler(evt));
+      .addEventListener('input', (evt) => this.#inputCommentHandler(evt));
+
+    this.element.addEventListener('scroll', debounce(() => (this.#positionTop = this.element.scrollTop), 500));
   };
 }
