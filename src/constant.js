@@ -35,3 +35,9 @@ export const UpdateType = {
   INIT: 'INIT',
 };
 
+export const CheckType = {
+  WATCH_LIST: 'watchlist',
+  WATCHED: 'watched',
+  FAVORITE: 'favorite',
+};
+
