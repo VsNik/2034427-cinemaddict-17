@@ -1,7 +1,8 @@
 import Observable from '../framework/observable.js';
-import {sortByDate, sortByRating, sortByComments} from '../utils/sorting.js';
+import {sortByDate, sortByRating} from '../utils/sorting.js';
 import {MOVIES_RATED_COUNT, MOVIES_COMMENTED_COUNT, UpdateType} from '../constant.js';
 import {adaptToClient} from '../adapter.js';
+import {getTopCommentsCount, getTopRated} from '../utils/top-movies.js';
 
 export default class MoviesModel extends Observable {
 
@@ -11,6 +12,28 @@ export default class MoviesModel extends Observable {
   constructor(movieApiService) {
     super();
     this.#movieApiService = movieApiService;
+  }
+
+  get movies() {
+    return this.#movies;
+  }
+
+  get topRating() {
+    return getTopRated([...this.movies], MOVIES_RATED_COUNT)
+      .filter((movie) => movie.filmInfo.totalRating !== 0);
+  }
+
+  get topCommentsCount() {
+    return getTopCommentsCount([...this.movies], MOVIES_COMMENTED_COUNT)
+      .filter((movie) => movie.comments.length !== 0);
+  }
+
+  get sortingDate() {
+    return  sortByDate([...this.#movies]);
+  }
+
+  get sortingRating() {
+    return sortByRating([...this.#movies]);
   }
 
   init = async () => {
@@ -23,28 +46,6 @@ export default class MoviesModel extends Observable {
 
     this._notify(UpdateType.INIT);
   };
-
-  get movies() {
-    return this.#movies;
-  }
-
-  get topRating() {
-    return sortByRating([...this.#movies]).slice(0, MOVIES_RATED_COUNT)
-      .filter((movie) => movie.filmInfo.totalRating !== 0);
-  }
-
-  get topCommentsCount() {
-    return sortByComments([...this.#movies]).slice(0, MOVIES_COMMENTED_COUNT)
-      .filter((movie) => movie.comments.length !== 0);
-  }
-
-  get sortingDate() {
-    return  sortByDate([...this.#movies]);
-  }
-
-  get sortingRating() {
-    return sortByRating([...this.#movies]);
-  }
 
   updateMovie = async (updateType, update) => {
     const index = this.#getUpdateIndex(update);

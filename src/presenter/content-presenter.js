@@ -2,7 +2,8 @@ import ContentView from '../view/content-view.js';
 import SortingView from '../view/sorting-view.js';
 import LoadingView from '../view/loading-view.js';
 import ListPresenter from './list-presenter.js';
-import ListExtraPresenter from './list-extra-presenter.js';
+import ListRatedPresenter from './list-rated-presenter.js';
+import ListCommentedPresenter from './list-commented-presenter.js';
 import UiBlocker from '../framework/ui-blocker/ui-blocker.js';
 import {FilterTypes, SortType, UpdateType, UserAction} from '../constant.js';
 import {remove, render, RenderPosition, replace} from '../framework/render.js';
@@ -12,7 +13,7 @@ const MIN_MOVIES_TO_SORT = 2;
 
 const TimeLimit = {
   LOWER_LIMIT: 50,
-  UPPER_LIMIT: 600,
+  UPPER_LIMIT: 500,
 };
 
 export default class ContentPresenter {
@@ -22,7 +23,8 @@ export default class ContentPresenter {
   #commentsModel;
   #filterModel;
   #listPresenter;
-  #listExtraPresenter;
+  #listRatedPresenter;
+  #listCommentedPresenter;
   #handleOpenPopup;
   #handleUpdatePopup;
   #handlePopupIsAborting;
@@ -62,6 +64,10 @@ export default class ContentPresenter {
     this.#handleUpdatePopup = handleUpdatePopup;
     this.#handlePopupIsAborting = handlePopupIsAborting;
 
+    this.#listPresenter = new ListPresenter(this.#contentComponent, this.#handleOpenPopup, this.handleViewAction, this.#filterModel);
+    this.#listRatedPresenter = new ListRatedPresenter(this.#contentComponent, this.#handleOpenPopup, this.handleViewAction);
+    this.#listCommentedPresenter = new ListCommentedPresenter(this.#contentComponent, this.#handleOpenPopup, this.handleViewAction);
+
     render(this.#contentComponent, this.#container);
     this.#renderLoading();
   };
@@ -72,8 +78,9 @@ export default class ContentPresenter {
         try {
           await this.#moviesModel.updateMovie(updateType, update);
         } catch (err) {
-          this.#setMovieAborting(this.#listExtraPresenter, update.id);
           this.#setMovieAborting(this.#listPresenter, update.id);
+          this.#setMovieAborting(this.#listRatedPresenter, update.id);
+          this.#setMovieAborting(this.#listCommentedPresenter, update.id);
           this.#handlePopupIsAborting();
         }
         break;
@@ -102,11 +109,9 @@ export default class ContentPresenter {
       this.#renderSort();
     }
 
-    this.#listPresenter = new ListPresenter(this.#contentComponent, this.#handleOpenPopup, this.handleViewAction, this.#filterModel);
-    this.#listExtraPresenter = new ListExtraPresenter(this.#contentComponent, this.#handleOpenPopup, this.handleViewAction);
-
     this.#listPresenter.render(this.movies);
-    this.#listExtraPresenter.render(this.#moviesModel.topRating, this.#moviesModel.topCommentsCount);
+    this.#listRatedPresenter.render(this.#moviesModel.topRating);
+    this.#listCommentedPresenter.render(this.#moviesModel.topCommentsCount);
   };
 
   #setMovieAborting = (listPresenter, movieId) => {
@@ -123,9 +128,9 @@ export default class ContentPresenter {
       case UpdateType.PATCH:
         this.#handleUpdatePopup(data);
         this.#updateData(this.#listPresenter, data, this.#commentsModel.comments);
-        this.#updateData(this.#listExtraPresenter, data, this.#commentsModel.comments);
+        this.#updateData(this.#listRatedPresenter, data, this.#commentsModel.comments);
+        this.#updateData(this.#listCommentedPresenter, data, this.#commentsModel.comments);
         this.#listPresenter.update(this.movies, {resetRenderedMoviesCount: false});
-        this.#listExtraPresenter.update(this.#moviesModel.topRating, this.#moviesModel.topCommentsCount);
         this.#updateSort();
         break;
       case UpdateType.MINOR:
@@ -135,9 +140,10 @@ export default class ContentPresenter {
       case UpdateType.MAJOR:
         this.#handleUpdatePopup(this.#commentsModel.commentedMovie);
         this.#listPresenter.update(this.movies, {resetRenderedMoviesCount: false});
-        this.#listExtraPresenter.update(this.#moviesModel.topRating, this.#moviesModel.topCommentsCount);
+        this.#listCommentedPresenter.update(this.#moviesModel.topCommentsCount);
         this.#updateData(this.#listPresenter, this.#commentsModel.commentedMovie, this.#commentsModel.comments);
-        this.#updateData(this.#listExtraPresenter, this.#commentsModel.commentedMovie, this.#commentsModel.comments);
+        this.#updateData(this.#listRatedPresenter, this.#commentsModel.commentedMovie, this.#commentsModel.comments);
+        this.#updateData(this.#listCommentedPresenter, this.#commentsModel.commentedMovie, this.#commentsModel.comments);
         break;
       case UpdateType.INIT:
         remove(this.#loadingComponent);
@@ -147,11 +153,11 @@ export default class ContentPresenter {
   };
 
   #updateData = (listPresenter, updatedMovie, comments) => {
-    listPresenter.getMoviePresenters().forEach((presenter) => {
+    for (const presenter of listPresenter.getMoviePresenters()) {
       if (presenter.movieId === updatedMovie.id) {
         presenter.init(updatedMovie, comments);
       }
-    });
+    }
   };
 
   #renderLoading = () => {

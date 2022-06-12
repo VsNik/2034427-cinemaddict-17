@@ -14,6 +14,14 @@ export default class CommentsModel extends Observable {
     this.#changeData = changeData;
   }
 
+  get comments() {
+    return this.#comments;
+  }
+
+  get commentedMovie() {
+    return this.#commentedMovie;
+  }
+
   init = async (movieId) => {
     try {
       const response = await this.#commentsApiService.getComments(movieId);
@@ -23,14 +31,6 @@ export default class CommentsModel extends Observable {
       this.#comments = [];
     }
   };
-
-  get comments() {
-    return this.#comments;
-  }
-
-  get commentedMovie() {
-    return this.#commentedMovie;
-  }
 
   removeComment = async (updateType, update) => {
     const index = this.#comments.findIndex((comment) => comment.id === update.commentId);
