@@ -20,6 +20,16 @@ export default class ProfilePresenter {
     this.#movies = this.#moviesModel.movies;
     const rating = getUserRang(this.#movies);
 
+    if (rating) {
+      this.#renderProfile(rating);
+      return;
+    }
+
+    remove(this.#profileComponent);
+    this.#profileComponent = null;
+  };
+
+  #renderProfile = (rating) => {
     const prevProfileComponent = this.#profileComponent;
     this.#profileComponent = new ProfileView(rating);
 

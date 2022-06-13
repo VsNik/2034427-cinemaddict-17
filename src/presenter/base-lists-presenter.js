@@ -9,10 +9,10 @@ export default class BaseListsPresenter {
   getMoviePresenters = () => this._moviePresenters;
 
   _renderMovies = (container, movies) => {
-    movies.forEach((movie) => {
+    for (const movie of movies) {
       const presenter = this._renderMovie(container.element, movie);
       this._moviePresenters.push(presenter);
-    });
+    }
   };
 
   _renderMovie = (movieContainer, movie) => {

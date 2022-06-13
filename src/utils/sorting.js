@@ -9,3 +9,4 @@ export const sortByDate = (movies) =>
 export const sortByComments = (movies) =>
   movies.sort((movieA, movieB) => movieB.comments.length - movieA.comments.length);
 
+export const randomSort = (list) => list.sort(() => 0.5 - Math.random());

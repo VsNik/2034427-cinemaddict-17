@@ -51,7 +51,7 @@ export default class ListPresenter extends BaseListsPresenter{
     const movies = this.#movies.slice(0, this.#renderedMovieCount);
     this._renderMovies(this.#moviesContainerComponent, movies);
 
-    if (this.#movies.length > SHOW_MOVIES_COUNT) {
+    if (this.#movies.length > this.#renderedMovieCount) {
       this.#renderLoadMoreButton();
     }
   };
@@ -76,7 +76,8 @@ export default class ListPresenter extends BaseListsPresenter{
 
   #onLoadMoreButtonClick = () => {
     const moviesCount = this.#movies.length;
-    const newRenderMoviesCount = Math.min(moviesCount, this.#renderedMovieCount + SHOW_MOVIES_COUNT);
+
+    const newRenderMoviesCount = this.#renderedMovieCount + SHOW_MOVIES_COUNT;
     const movies = this.#movies.slice(this.#renderedMovieCount, newRenderMoviesCount);
 
     this._renderMovies(this.#moviesContainerComponent, movies);
