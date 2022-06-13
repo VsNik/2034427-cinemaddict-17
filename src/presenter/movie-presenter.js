@@ -16,10 +16,6 @@ export default class MoviePresenter {
     this.#handleOpenPopup = handleOpenPopup;
   }
 
-  get movieId() {
-    return this.#movie.id;
-  }
-
   init = (movie) => {
     this.#movie = movie;
 

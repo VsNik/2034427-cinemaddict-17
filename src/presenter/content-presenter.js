@@ -114,12 +114,12 @@ export default class ContentPresenter {
     this.#listCommentedPresenter.render(this.#moviesModel.topCommentsCount);
   };
 
+  #getMoviePresenter = (listPresenter, movieId) => listPresenter.getMoviePresenters().get(movieId);
+
   #setMovieAborting = (listPresenter, movieId) => {
-    for (const presenter of listPresenter.getMoviePresenters()) {
-      if (presenter.movieId === movieId) {
-        presenter.handleIsAborting();
-        break;
-      }
+    const moviePresenter = this.#getMoviePresenter(listPresenter, movieId);
+    if (moviePresenter) {
+      moviePresenter.handleIsAborting();
     }
   };
 
@@ -153,10 +153,9 @@ export default class ContentPresenter {
   };
 
   #updateData = (listPresenter, updatedMovie, comments) => {
-    for (const presenter of listPresenter.getMoviePresenters()) {
-      if (presenter.movieId === updatedMovie.id) {
-        presenter.init(updatedMovie, comments);
-      }
+    const presenter = this.#getMoviePresenter(listPresenter, updatedMovie.id);
+    if (presenter) {
+      presenter.init(updatedMovie, comments);
     }
   };
 

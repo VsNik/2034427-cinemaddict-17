@@ -28,8 +28,7 @@ export default class ListCommentedPresenter extends BaseListsPresenter {
   };
 
   update = (movies) => {
-    this._moviePresenters.forEach((presenter) => presenter.destroy());
-    this._moviePresenters = [];
+    this._moviePresenters.forEach((moviePresenter) => moviePresenter.destroy());
     remove(this.#listComponent);
     this.render(movies);
   };

@@ -80,7 +80,7 @@ export default class MovieView extends AbstractStatefulView {
   }
 
   setOpenPopupClickHandler = (callback) => {
-    this._callback.click = callback;
+    this._callback.clickOpenPopup = callback;
     this.element.addEventListener('click', this.#openPopupClickHandler);
   };
 
@@ -126,6 +126,7 @@ export default class MovieView extends AbstractStatefulView {
   };
 
   _restoreHandlers =() => {
+    this.setOpenPopupClickHandler(this._callback.clickOpenPopup);
     this.setWatchListClickHandler(this._callback.watchListClick);
     this.setWatchedClickHandler(this._callback.watchedClick);
     this.setFavoriteClickHandler(this._callback.favoriteClick);
@@ -136,7 +137,7 @@ export default class MovieView extends AbstractStatefulView {
   #openPopupClickHandler = (evt) => {
     evt.preventDefault();
     if (evt.target.tagName !== 'BUTTON') {
-      this._callback.click();
+      this._callback.clickOpenPopup();
     }
   };
 

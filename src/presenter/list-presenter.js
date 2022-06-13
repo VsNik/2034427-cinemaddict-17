@@ -57,8 +57,7 @@ export default class ListPresenter extends BaseListsPresenter{
   };
 
   update = (movies, {resetRenderedMoviesCount = true} = {}) => {
-    this._moviePresenters.forEach((presenter) => presenter.destroy());
-    this._moviePresenters = [];
+    this._moviePresenters.forEach((moviePresenter) => moviePresenter.destroy());
 
     if (resetRenderedMoviesCount) {
       this.#renderedMovieCount = SHOW_MOVIES_COUNT;
