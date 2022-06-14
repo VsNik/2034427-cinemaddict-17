@@ -1,11 +1,11 @@
 import AbstractView from '../framework/view/abstract-view.js';
-import {FilterTypes} from '../constant.js';
+import {FilterType} from '../constant.js';
 
 const NoContentMessage = {
-  [FilterTypes.ALL]: 'There are no movies in our database',
-  [FilterTypes.WATCHLIST]: 'There are no movies to watch now',
-  [FilterTypes.HISTORY]: 'There are no watched movies now',
-  [FilterTypes.FAVORITES]: 'There are no favorite movies now',
+  [FilterType.ALL]: 'There are no movies in our database',
+  [FilterType.WATCHLIST]: 'There are no movies to watch now',
+  [FilterType.HISTORY]: 'There are no watched movies now',
+  [FilterType.FAVORITES]: 'There are no favorite movies now',
 };
 
 const createNoMoviesTemplate = (filterType) => {

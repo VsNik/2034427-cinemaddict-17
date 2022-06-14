@@ -9,7 +9,7 @@ export const UserRang = {
   MOVIE_BUFF: 'Movie Buff',
 };
 
-export const FilterTypes= {
+export const FilterType= {
   ALL: 'All movies',
   WATCHLIST: 'WatchList',
   HISTORY: 'History',

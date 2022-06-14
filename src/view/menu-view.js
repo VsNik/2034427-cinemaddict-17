@@ -1,5 +1,5 @@
 import AbstractView from '../framework/view/abstract-view.js';
-import {FilterTypes} from '../constant.js';
+import {FilterType} from '../constant.js';
 
 const createMenuTemplate = (filters, currentFilterType) => {
 
@@ -18,10 +18,10 @@ const createMenuTemplate = (filters, currentFilterType) => {
     <nav class="main-navigation">
       <a
         href="#all"
-        class="main-navigation__item ${currentFilterType === FilterTypes.ALL ? 'main-navigation__item--active' : ''}"
-        data-filter-type="${FilterTypes.ALL}"
+        class="main-navigation__item ${currentFilterType === FilterType.ALL ? 'main-navigation__item--active' : ''}"
+        data-filter-type="${FilterType.ALL}"
       >
-        ${FilterTypes.ALL}
+        ${FilterType.ALL}
       </a>
         ${filterItems}
     </nav>`;

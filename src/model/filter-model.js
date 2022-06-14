@@ -1,9 +1,9 @@
 import Observable from '../framework/observable.js';
-import {FilterTypes} from '../constant.js';
+import {FilterType} from '../constant.js';
 
 export default class FilterModel extends Observable {
 
-  #filter = FilterTypes.ALL;
+  #filter = FilterType.ALL;
 
   get filter() {
     return this.#filter;

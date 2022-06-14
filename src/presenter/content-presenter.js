@@ -5,7 +5,7 @@ import ListPresenter from './list-presenter.js';
 import ListRatedPresenter from './list-rated-presenter.js';
 import ListCommentedPresenter from './list-commented-presenter.js';
 import UiBlocker from '../framework/ui-blocker/ui-blocker.js';
-import {FilterTypes, SortType, UpdateType, UserAction} from '../constant.js';
+import {FilterType, SortType, UpdateType, UserAction} from '../constant.js';
 import {remove, render, RenderPosition, replace} from '../framework/render.js';
 import {getFilter} from '../utils/filter.js';
 
@@ -32,7 +32,7 @@ export default class ContentPresenter {
   #loadingComponent = new LoadingView();
   #contentComponent = new ContentView();
   #currentSortType = SortType.DEFAULT;
-  #filterType = FilterTypes.ALL;
+  #filterType = FilterType.ALL;
   #uiBlocker = new UiBlocker(TimeLimit.LOWER_LIMIT, TimeLimit.UPPER_LIMIT);
 
   constructor(container, moviesModel, commentsModel, filterModel) {

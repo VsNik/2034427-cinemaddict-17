@@ -47,8 +47,8 @@ export default class PopupPresenter {
 
   #handleClosePopup = () => {
     remove(this.#popupComponent);
-    document.removeEventListener('keydown', this.#handlerEscKeyDown);
-    document.removeEventListener('keydown', this.#handleSaveKeyDown);
+    document.removeEventListener('keydown', this.#escKeyDownHandler);
+    document.removeEventListener('keydown', this.#ctrAndEnterKeyDownHandler);
     showScroll(this.#container);
     this.#popupStatus = PopupStatus.CLOSE;
   };
@@ -66,8 +66,8 @@ export default class PopupPresenter {
     this.#popupComponent.setFavoriteClickHandler(() => this.#handleFavoriteClick(movie));
     this.#popupComponent.setRemoveClickHandler(this.#handleRemoveCommentClick);
 
-    document.addEventListener('keydown', this.#handlerEscKeyDown);
-    document.addEventListener('keydown', this.#handleSaveKeyDown);
+    document.addEventListener('keydown', this.#escKeyDownHandler);
+    document.addEventListener('keydown', this.#ctrAndEnterKeyDownHandler);
     hideScroll(this.#container);
 
     render(this.#popupComponent, this.#container);
@@ -76,9 +76,9 @@ export default class PopupPresenter {
     this.#popupStatus = PopupStatus.OPEN;
   };
 
-  #handlerEscKeyDown = (evt) => {
+  #escKeyDownHandler = (evt) => {
     if (evt.key === 'Esc' || evt.key === 'Escape') {
-      document.removeEventListener('keydown', this.#handlerEscKeyDown);
+      document.removeEventListener('keydown', this.#escKeyDownHandler);
       this.#handleClosePopup();
     }
   };
@@ -101,7 +101,7 @@ export default class PopupPresenter {
     this.#changeData(UserAction.UPDATE_MOVIE, UpdateType.PATCH, {...this.#movie, userDetails: newUserDetails});
   };
 
-  #handleSaveKeyDown = (evt) => {
+  #ctrAndEnterKeyDownHandler = (evt) => {
     if (evt.ctrlKey && evt.key === 'Enter' && !this.#isSaving) {
       this.#isSaving = true;
       this.#popupComponent.update({isSaving: true});
